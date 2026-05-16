@@ -1,0 +1,101 @@
+"""Endpoints de pronósticos para participantes."""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from app.qnla.database import get_db
+from app.qnla.models.partido import Partido
+from app.qnla.models.participante import Participante
+from app.qnla.models.pronostico import Pronostico
+from app.qnla.schemas.pronostico import PronosticoCreate, PronosticoOut
+from app.qnla.routers.deps import get_current_participante
+
+router = APIRouter(prefix="/qnla/pronosticos", tags=["qnla-pronosticos"])
+
+
+@router.get("/me")
+def yo(current: Participante = Depends(get_current_participante)):
+    return {
+        "id": current.id,
+        "email": current.email,
+        "nombre": current.nombre,
+        "torneo_id": current.torneo_id,
+        "es_admin": current.es_admin,
+    }
+
+
+@router.get("/torneo/{torneo_id}", response_model=list[PronosticoOut])
+def mis_pronosticos(
+    torneo_id: int,
+    db: Session = Depends(get_db),
+    current: Participante = Depends(get_current_participante),
+):
+    if current.torneo_id != torneo_id:
+        raise HTTPException(status_code=403, detail="No perteneces a este torneo")
+    return db.scalars(
+        select(Pronostico).where(Pronostico.participante_id == current.id)
+    ).all()
+
+
+@router.post("/", response_model=PronosticoOut, status_code=status.HTTP_201_CREATED)
+def crear_o_actualizar_pronostico(
+    payload: PronosticoCreate,
+    db: Session = Depends(get_db),
+    current: Participante = Depends(get_current_participante),
+):
+    partido = db.get(Partido, payload.partido_id)
+    if not partido:
+        raise HTTPException(status_code=404, detail="Partido no encontrado")
+    if partido.torneo_id != current.torneo_id:
+        raise HTTPException(status_code=403, detail="El partido no pertenece a tu torneo")
+    if datetime.now(timezone.utc) >= partido.cierre_pronostico.replace(tzinfo=timezone.utc):
+        raise HTTPException(status_code=409, detail="El plazo de pronóstico está cerrado")
+    if partido.finalizado:
+        raise HTTPException(status_code=409, detail="No se puede pronosticar un partido finalizado")
+
+    existing = db.scalars(
+        select(Pronostico).where(
+            Pronostico.participante_id == current.id,
+            Pronostico.partido_id == payload.partido_id,
+        )
+    ).first()
+
+    if existing:
+        existing.goles_local = payload.goles_local
+        existing.goles_visitante = payload.goles_visitante
+        existing.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    prono = Pronostico(
+        participante_id=current.id,
+        partido_id=payload.partido_id,
+        goles_local=payload.goles_local,
+        goles_visitante=payload.goles_visitante,
+    )
+    db.add(prono)
+    db.commit()
+    db.refresh(prono)
+    return prono
+
+
+@router.get("/partido/{partido_id}", response_model=PronosticoOut)
+def mi_pronostico_partido(
+    partido_id: int,
+    db: Session = Depends(get_db),
+    current: Participante = Depends(get_current_participante),
+):
+    prono = db.scalars(
+        select(Pronostico).where(
+            Pronostico.participante_id == current.id,
+            Pronostico.partido_id == partido_id,
+        )
+    ).first()
+    if not prono:
+        raise HTTPException(status_code=404, detail="Pronóstico no encontrado")
+    return prono

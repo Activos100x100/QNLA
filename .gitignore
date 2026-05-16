@@ -1,0 +1,29 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE / OS
+.vscode/
+.DS_Store
+
+# Runtime / logs
+*.log
+.uvicorn_pid
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+app/Archivo .env
+app/google-oauth.json
+app/core/auth/google-oauth.json
+app/service-account.json
+app/tokens/

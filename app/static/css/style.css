@@ -1,0 +1,341 @@
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f8;
+}
+
+.container{
+display:flex;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:260px;
+background:black;
+color:white;
+padding:20px;
+}
+
+.logo img{
+width:140px;
+margin-bottom:30px;
+}
+
+.menu{
+list-style:none;
+padding:0;
+}
+
+.menu-item{
+margin-bottom:15px;
+}
+
+.menu-item span{
+cursor:pointer;
+display:block;
+padding:10px;
+}
+
+.submenu{
+display:none;
+padding-left:20px;
+}
+
+.submenu li{
+margin:8px 0;
+}
+
+.submenu a{
+color:white;
+text-decoration:none;
+}
+
+
+/* CONTENIDO */
+
+.content{
+flex:1;
+background:white;
+position:relative;
+padding:40px;
+}
+
+/* LOGO DIFUMINADO */
+
+.background-logo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:400px;
+height:400px;
+background:url('/static/img/logo.png') no-repeat center;
+background-size:contain;
+opacity:0.05;
+pointer-events:none;
+}
+
+.page{
+position:relative;
+z-index:2;
+}
+
+/* FORM */
+
+.form-row{
+margin-bottom:15px;
+}
+
+input{
+padding:8px;
+width:300px;
+}
+
+button{
+padding:10px 20px;
+background:#3498db;
+border:none;
+color:white;
+}
+/* Basic layout and colors for NachitoRRHH dashboard */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #f4f6f8;
+  color: #222;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #111;
+  color: #fff;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.logo img{
+width:160px;
+margin:auto;
+display:block;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  margin-bottom: 10px;
+}
+
+.menu-item > span {
+  cursor: pointer;
+  display: block;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: #1f2937;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+
+.menu-item > span:hover {
+  background: #293548;
+  border-color: #475569;
+}
+
+.submenu {
+  display: none;
+  list-style: none;
+  padding: 8px 0 0 0;
+  margin: 0;
+}
+
+.submenu li {
+  margin: 6px 0;
+}
+
+.submenu a {
+  display: block;
+  color: #cfe8ff;
+  text-decoration: none;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.submenu a:hover {
+  background: #172033;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+/* Floating submenu style (Google Workspace-like) */
+.menu-item.has-flyout {
+  position: relative;
+}
+
+.menu-flyout-trigger {
+  position: relative;
+}
+
+.menu-item.has-flyout > .menu-flyout-trigger::after {
+  content: '▸';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9fb2ca;
+  font-size: 12px;
+}
+
+.submenu-flyout,
+.submenu-flyout-nested {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  min-width: 240px;
+  background: #ffffff;
+  border: 1px solid #dbe7f5;
+  border-radius: 12px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.18);
+}
+
+.submenu-flyout {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-8px) scale(0.98);
+  transform-origin: left top;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+  z-index: 30;
+}
+
+.menu-item.has-flyout:hover > .submenu-flyout,
+.menu-item.has-flyout.open > .submenu-flyout {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.submenu-flyout li,
+.submenu-flyout-nested li {
+  margin: 0;
+}
+
+.submenu-flyout a,
+.submenu-flyout-nested a,
+.submenu-flyout .submenu-nested-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #1e293b;
+  background: transparent;
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.submenu-flyout a:hover,
+.submenu-flyout-nested a:hover,
+.submenu-flyout .submenu-nested-trigger:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #0f172a;
+}
+
+.submenu-flyout .has-sublevel {
+  position: relative;
+}
+
+.submenu-flyout-nested {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: -2px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-6px) scale(0.98);
+  transform-origin: left top;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+  z-index: 35;
+}
+
+.submenu-flyout .has-sublevel:hover > .submenu-flyout-nested,
+.submenu-flyout .has-sublevel.open > .submenu-flyout-nested {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+@media (max-width: 900px) {
+  .submenu-flyout,
+  .submenu-flyout-nested {
+    position: static;
+    left: auto;
+    top: auto;
+    margin-top: 8px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .menu-item.has-flyout:not(.open) > .submenu-flyout,
+  .submenu-flyout .has-sublevel:not(.open) > .submenu-flyout-nested {
+    display: none;
+  }
+}
+
+/* User avatar in sidebar */
+.sidebar .user-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.6); border:2px solid rgba(255,255,255,0.06); background:#111; padding:2px }
+.sidebar #usuario_name{ font-weight:600; color:#9ad6ff }
+
+.content {
+  flex: 1;
+  padding: 28px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.background-logo { position: absolute; right: 20px; top: 20px; opacity: 0.04; width: 220px; }
+
+.page {
+  background: #fff;
+  padding: 24px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(13,23,34,0.06);
+}
+
+h1 { margin-top: 0; font-size: 32px; }
+
+/* small screens */
+@media (max-width: 700px) {
+  .container { flex-direction: column; }
+  .sidebar { width: 100%; }
+}

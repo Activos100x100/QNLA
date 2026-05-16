@@ -1,0 +1,50 @@
+{% extends "qnla/layout.html" %}
+{% block title %}Ranking – QNLA{% endblock %}
+{% block page_title %}Ranking del Torneo{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Participante</th>
+          <th>Email</th>
+          <th class="text-center">Exactos</th>
+          <th class="text-center">Ganador</th>
+          <th class="text-end">Puntos</th>
+        </tr>
+      </thead>
+      <tbody id="ranking-body">
+        <tr><td colspan="6" class="text-center text-muted py-4">Cargando…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function(){
+  const me = window.QNLA_ME;
+  if (!me) return;
+
+  const r = await fetch(`/qnla/ranking/${me.torneo_id}`);
+  if (!r.ok) return;
+  const rows = await r.json();
+
+  const body = document.getElementById('ranking-body');
+  body.innerHTML = rows.map(x => `
+    <tr${x.participante_id == me.id ? ' class="table-warning"' : ''}>
+      <td class="fw-semibold">${x.posicion}</td>
+      <td>${x.nombre}</td>
+      <td class="text-muted">${x.email}</td>
+      <td class="text-center">${x.aciertos_exactos}</td>
+      <td class="text-center">${x.aciertos_ganador}</td>
+      <td class="text-end fw-bold">${x.puntos_totales}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sin datos</td></tr>';
+})();
+</script>
+{% endblock %}

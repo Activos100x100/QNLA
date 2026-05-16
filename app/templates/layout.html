@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+<head>
+
+
+<meta charset="UTF-8">
+<title>QNLA</title>
+
+
+<link rel="stylesheet" href="/static/css/style.css?v=20260506-menu2">
+{% block styles %}{% endblock %}
+
+<style>
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    max-width: 100vw;
+}
+.sidebar {
+    width: 300px;
+    min-width: 240px;
+    max-width: 340px;
+    background: #000000;
+    color: #fff;
+    height: 100vh;
+    position: relative;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 0 0;
+    overflow: visible;
+}
+.content {
+    flex: 1;
+    background: #fafbfc;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+.page {
+    flex: 1;
+    padding: 40px 40px 40px 40px;
+    min-height: 100vh;
+}
+#auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 40, 0.97);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+html.has-auth-session #auth-overlay {
+    display: none !important;
+}
+#auth-overlay .auth-box {
+    background: #1a2436;
+    border: 1px solid #2d4a6e;
+    border-radius: 16px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+#auth-overlay img.auth-logo {
+    width: 140px;
+    margin-bottom: 24px;
+}
+#auth-overlay h2 {
+    color: #fff;
+    font-size: 22px;
+    margin: 0 0 8px 0;
+}
+#auth-overlay p {
+    color: #9ad6ff;
+    font-size: 14px;
+    margin: 0 0 28px 0;
+}
+#auth-overlay #google-signin-overlay {
+    display: flex;
+    justify-content: center;
+}
+#auth-overlay .auth-hint {
+    color: #4a6a8a;
+    font-size: 12px;
+    margin-top: 20px;
+}
+
+/* Forzado visual menús flyout laterales (tipo Google Docs) */
+#menu-consultas,
+#menu-herramientas,
+#menu-exportacion {
+    position: relative;
+}
+
+#menu-consultas > .menu-flyout-trigger,
+#menu-herramientas > .menu-flyout-trigger,
+#menu-exportacion > .menu-flyout-trigger {
+    position: relative;
+    user-select: none;
+}
+
+#menu-consultas > .menu-flyout-trigger::after,
+#menu-herramientas > .menu-flyout-trigger::after,
+#menu-exportacion > .menu-flyout-trigger::after {
+    content: '▸';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a8bed8;
+    font-size: 12px;
+}
+
+#menu-consultas > .submenu-flyout,
+#menu-herramientas > .submenu-flyout,
+#menu-exportacion > .submenu-flyout {
+    position: absolute !important;
+    left: calc(100% + 8px) !important;
+    top: 0 !important;
+    min-width: 250px;
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    border-radius: 12px;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.20);
+    z-index: 10050;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-10px) scale(.985);
+    transform-origin: left top;
+    transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+}
+
+#menu-consultas:hover > .submenu-flyout,
+#menu-consultas.open > .submenu-flyout,
+#menu-herramientas:hover > .submenu-flyout,
+#menu-herramientas.open > .submenu-flyout,
+#menu-exportacion:hover > .submenu-flyout,
+#menu-exportacion.open > .submenu-flyout {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0) scale(1);
+}
+
+#menu-consultas > .submenu-flyout > li,
+#menu-herramientas > .submenu-flyout > li,
+#menu-exportacion > .submenu-flyout > li {
+    margin: 0;
+}
+
+#menu-consultas > .submenu-flyout > li > a,
+#menu-herramientas > .submenu-flyout > li > a,
+#menu-exportacion > .submenu-flyout > li > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: #1e293b;
+    text-decoration: none;
+    font-size: 13px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+#menu-consultas > .submenu-flyout > li > a:hover,
+#menu-herramientas > .submenu-flyout > li > a:hover,
+#menu-exportacion > .submenu-flyout > li > a:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+#menu-consultas .submenu-divider,
+#menu-herramientas .submenu-divider,
+#menu-exportacion .submenu-divider {
+    height: 1px;
+    margin: 6px 4px;
+    background: #e2e8f0;
+}
+
+#menu-consultas .submenu-label,
+#menu-herramientas .submenu-label,
+#menu-exportacion .submenu-label {
+    padding: 6px 10px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+</style>
+
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+// Evita parpadeo del overlay al navegar entre vistas si ya hay sesión local
+(function () {
+    try {
+        if (localStorage.getItem('usuario_email')) {
+            document.documentElement.classList.add('has-auth-session');
+        }
+    } catch (e) {
+        console.warn('session precheck error', e);
+    }
+})();
+</script>
+
+<script>
+window.GOOGLE_CLIENT_ID = "659774952506-i39ua5tf4d6qsqgqpn9a9jcoa8mlbvrk.apps.googleusercontent.com";
+function handleCredentialResponse(response) {
+    try {
+        // Decodificar JWT sin librerías externas
+        const payload = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+        const email = payload.email || '';
+        const name = payload.name || email.split('@')[0];
+        const picture = payload.picture || '';
+        if (email) {
+            localStorage.setItem('usuario_email', email);
+            localStorage.setItem('usuario_name', name);
+            localStorage.setItem('usuario_picture', picture);
+            updateUserInfo();
+        }
+    } catch(e) { console.warn('handleCredentialResponse error', e); }
+}
+
+window.addEventListener('load', function() {
+    try {
+        const hasSession = !!localStorage.getItem('usuario_email');
+
+        google.accounts.id.initialize({
+            client_id: window.GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+            auto_select: true
+        });
+        // Renderizar botón en el overlay de autenticación
+        const overlayBtn = document.getElementById('google-signin-overlay');
+        if (overlayBtn && !hasSession) {
+            google.accounts.id.renderButton(overlayBtn, {
+                theme: 'filled_blue',
+                size: 'large',
+                text: 'signin_with',
+                shape: 'rectangular',
+                logo_alignment: 'left',
+                width: 280
+            });
+        }
+        // Renderizar botón en el sidebar (si no hay sesión)
+        const btnContainer = document.getElementById('google-login-btn');
+        if (btnContainer) {
+            if (hasSession) {
+                btnContainer.style.display = 'none';
+                btnContainer.innerHTML = '';
+            } else {
+                btnContainer.style.display = 'block';
+                btnContainer.innerHTML = '';
+                google.accounts.id.renderButton(btnContainer, {
+                    theme: 'outline',
+                    size: 'medium',
+                    text: 'signin_with',
+                    shape: 'rectangular',
+                    logo_alignment: 'left'
+                });
+            }
+        }
+        // One Tap solo si no hay sesión
+        if (!hasSession) {
+            google.accounts.id.prompt();
+        }
+    } catch(e) { console.warn('Google Identity init error', e); }
+});
+</script>
+
+</head>
+
+
+<body>
+
+<!-- OVERLAY DE AUTENTICACIÓN -->
+<div id="auth-overlay">
+    <div class="auth-box">
+        <img src="/static/img/logo.png" alt="QNLA" class="auth-logo">
+        <h2>Acceso restringido</h2>
+        <p>Inicia sesión con tu cuenta de Google para continuar</p>
+        <div id="google-signin-overlay"></div>
+        <!-- Fallback: acceso directo por email -->
+        <div style="margin-top:18px;border-top:1px solid rgba(255,255,255,0.15);padding-top:16px;">
+            <p style="color:#94a3b8;font-size:13px;margin-bottom:8px;">¿Problemas con Google? Accede directamente:</p>
+            <input id="fallback-email" type="email" placeholder="tu@activos100x100.com"
+                style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:14px;box-sizing:border-box;"
+                onkeydown="if(event.key==='Enter') window._loginFallback()">
+            <button onclick="window._loginFallback()"
+                style="margin-top:8px;width:100%;padding:10px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:14px;cursor:pointer;font-weight:600;">
+                Entrar
+            </button>
+        </div>
+        <div class="auth-hint">Solo cuentas autorizadas pueden acceder</div>
+    </div>
+</div>
+<script>
+window._loginFallback = function(){
+    const email = (document.getElementById('fallback-email')?.value||'').trim().toLowerCase();
+    const allowed = ['activos100x100.com','nachogarcia.com'];
+    const domain = email.split('@')[1]||'';
+    if(!email || !email.includes('@')){
+        document.getElementById('fallback-email').style.borderColor='#ef4444';
+        return;
+    }
+    const ok = allowed.some(d => domain === d) || email === 'it@activos100x100.com';
+    if(!ok){
+        document.getElementById('fallback-email').style.borderColor='#ef4444';
+        alert('Acceso no autorizado para ese email');
+        return;
+    }
+    const name = email.split('@')[0].replace(/\./g,' ');
+    localStorage.setItem('usuario_email', email);
+    localStorage.setItem('usuario_name', name);
+    localStorage.setItem('usuario_picture', '');
+    const overlay = document.getElementById('auth-overlay');
+    if(overlay) overlay.style.display='none';
+    if(window.updateUserInfo) updateUserInfo();
+    window.currentUserEmail = email;
+};
+</script>
+
+<div class="container">
+
+
+   <!-- SIDEBAR -->
+
+
+   <div class="sidebar">
+
+
+       <div class="logo" style="text-align:center;margin-bottom:20px;">
+           <img src="/static/img/logo.png" style="width:160px;">
+           <div style="margin-top:10px;">
+               <a href="/" style="color:#9ad6ff;font-weight:700;font-size:16px;text-decoration:none;display:inline-block;">
+                   QNLA
+               </a>
+           </div>
+       </div>
+
+
+       <div id="sidebar_email" style="color:#fff;font-size:14px;margin-bottom:20px;">
+           <span id="emailBox">No identificado</span>
+       </div>
+
+
+       <div id="user-info" style="margin-top:12px;color:#fff;font-size:14px;display:flex;align-items:center;gap:8px;">
+           <img id="usuario_avatar" src="/static/img/usuario_logo.svg" alt="avatar" class="user-avatar" style="display:none" onerror="this.onerror=null;this.src='/static/img/logo.png'">
+           <div style="display:flex;flex-direction:column;">
+               <div id="usuario_name" style="color:#9ad6ff;word-break:break-all;font-weight:600"></div>
+               <div id="usuario_email_hidden" style="display:none;color:#9ad6ff;font-size:12px;opacity:0.85"></div>
+           </div>
+
+       </div>
+
+
+       <div id="google-login-btn" style="display:none; margin-top:10px;">
+           <div style="padding:8px 12px;border-radius:6px;background:#2d6b2d;color:#fff;display:inline-block;font-size:13px;">
+               Operación: usando Service Account (no es necesario iniciar sesión)
+           </div>
+       </div>
+
+
+       <ul class="menu">
+
+
+           <li class="menu-item has-flyout" id="menu-herramientas">
+               <span class="menu-flyout-trigger" data-flyout-trigger aria-haspopup="true" aria-expanded="false">🛠️ Herramientas</span>
+               <ul id="herramientas" class="submenu-flyout" role="menu" aria-label="Herramientas">
+                   <li role="presentation" class="submenu-label">QNLA</li>
+                   <li role="none"><a role="menuitem" href="/qnla/admin/torneos">Crear Torneo</a></li>
+                   <li role="presentation" class="submenu-divider"></li>
+
+                   <li role="presentation" class="submenu-label">Operaciones</li>
+                   <li role="none"><span style="opacity:.7;padding:8px 14px;display:inline-block;">Sin módulos operativos adicionales</span></li>
+                   <li role="presentation" class="submenu-divider"></li>
+
+                   <li role="presentation" class="submenu-label">WhatsApp</li>
+                   <li role="none"><a role="menuitem" href="/herramientas/consentimiento-whatsapp">Consentimiento WhatsApp</a></li>
+               </ul>
+           </li>
+
+           <li class="menu-item has-flyout" id="menu-consultas">
+               <span class="menu-flyout-trigger" data-flyout-trigger aria-haspopup="true" aria-expanded="false">🔍 Consultas</span>
+               <ul class="submenu-flyout" role="menu" aria-label="Consultas">
+                   <li role="none"><span style="opacity:.7;padding:8px 14px;display:inline-block;">Sin consultas activas</span></li>
+               </ul>
+           </li>
+
+           <li class="menu-item has-flyout" id="menu-exportacion" style="display:none;">
+               <span class="menu-flyout-trigger" data-flyout-trigger aria-haspopup="true" aria-expanded="false">🔗 Exportación</span>
+               <ul class="submenu-flyout" role="menu" aria-label="Exportación">
+                   <li role="presentation" class="submenu-label">Vistas sin menú</li>
+                   <li role="none"><span style="opacity:.7;padding:8px 14px;display:inline-block;">Sin vistas de exportación activas</span></li>
+               </ul>
+           </li>
+
+
+       </ul>
+
+
+   </div>
+
+
+   <!-- CONTENIDO -->
+
+
+   <div class="content">
+
+
+       <div class="background-logo"></div>
+
+
+       <div class="page">
+           {% block content %}{% endblock %}
+       </div>
+
+
+   </div>
+
+
+</div>
+
+
+<script src="/static/js/menu.js?v=20260506-menu2"></script>
+
+
+<script>
+// 👇 ESTO SE MANTIENE (NO DA PROBLEMAS)
+function updateUserInfo(){
+   let email = localStorage.getItem('usuario_email');
+   let name = localStorage.getItem('usuario_name') || '';
+   let picture = localStorage.getItem('usuario_picture') || '';
+
+   if(!email && document.cookie){
+       const cookieMatch = document.cookie.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+       if(cookieMatch){
+           email = cookieMatch[0];
+           try{ localStorage.setItem('usuario_email', email); }catch(e){}
+       }
+   }
+
+   const overlay = document.getElementById('auth-overlay');
+   const nameEl = document.getElementById('usuario_name');
+   const sidebarEmail = document.getElementById('sidebar_email');
+   const avatar = document.getElementById('usuario_avatar');
+   const googleBtn = document.getElementById('google-login-btn');
+
+   if(email){
+       document.documentElement.classList.add('has-auth-session');
+       // Ocultar overlay — liberar acceso
+       if(overlay) overlay.style.display = 'none';
+       window.currentUserEmail = email;
+       const emailBox = document.getElementById('emailBox');
+       if(emailBox) emailBox.innerText = email;
+       if(nameEl) nameEl.textContent = name || email.split('@')[0];
+       if(avatar){
+           if(picture){ avatar.src = picture; }
+           avatar.style.display = 'block';
+       }
+       if(googleBtn) googleBtn.style.display = 'none';
+   } else {
+       document.documentElement.classList.remove('has-auth-session');
+       // Mostrar overlay — bloquear acceso
+       if(overlay) overlay.style.display = 'flex';
+       window.currentUserEmail = null;
+       if(nameEl) nameEl.textContent = '';
+       if(sidebarEmail) sidebarEmail.innerHTML = '<span id="emailBox">No identificado</span>';
+       if(avatar) avatar.style.display = 'none';
+       if(googleBtn) googleBtn.style.display = 'block';
+   }
+}
+
+
+document.addEventListener('DOMContentLoaded', function(){
+   updateUserInfo();
+
+});
+</script>
+
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
+

@@ -1,0 +1,15 @@
+.gcloudignore
+.git
+.gitignore
+.DS_Store
+.uvicorn_pid
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+app/Archivo .env
+app/google-oauth.json
+app/core/auth/google-oauth.json
+app/service-account.json
+app/tokens/

@@ -1,0 +1,74 @@
+{% extends "qnla/layout.html" %}
+{% block title %}Participantes – QNLA{% endblock %}
+{% block page_title %}Participantes{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <h6 class="fw-bold">Nuevo participante</h6>
+    <div class="row g-2">
+      <div class="col-md-4"><input class="form-control" id="p-nombre" placeholder="Nombre"></div>
+      <div class="col-md-4"><input class="form-control" id="p-email" placeholder="email@dominio.com"></div>
+      <div class="col-md-2">
+        <select class="form-select" id="p-admin">
+          <option value="false">Usuario</option>
+          <option value="true">Admin</option>
+        </select>
+      </div>
+      <div class="col-md-2"><button class="btn btn-danger w-100" onclick="crearParticipante()">Agregar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <table class="table mb-0">
+      <thead class="table-light"><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Activo</th></tr></thead>
+      <tbody id="participantes-body"><tr><td colspan="4" class="text-muted text-center">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadParticipantes() {
+  const me = window.QNLA_ME;
+  if (!me) return;
+  const r = await qnlaFetch(`/qnla/admin/torneos/${me.torneo_id}/participantes`);
+  if (!r || !r.ok) return;
+  const rows = await r.json();
+  const body = document.getElementById('participantes-body');
+  body.innerHTML = rows.map(p => `
+    <tr>
+      <td>${p.nombre}</td>
+      <td>${p.email}</td>
+      <td>${p.es_admin ? '<span class="badge bg-dark">Admin</span>' : '<span class="badge bg-secondary">User</span>'}</td>
+      <td>${p.activo ? '✅' : '❌'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" class="text-center text-muted">Sin participantes</td></tr>';
+}
+
+async function crearParticipante() {
+  const me = window.QNLA_ME;
+  if (!me) return;
+  const nombre = document.getElementById('p-nombre').value.trim();
+  const email  = document.getElementById('p-email').value.trim();
+  const esAdmin = document.getElementById('p-admin').value === 'true';
+  if (!nombre || !email) { alert('Completa nombre y email'); return; }
+
+  const params = new URLSearchParams({ nombre, email, es_admin: String(esAdmin) });
+  const r = await qnlaFetch(`/qnla/admin/torneos/${me.torneo_id}/participantes?${params.toString()}`, { method: 'POST' });
+  if (r && r.ok) {
+    document.getElementById('p-nombre').value = '';
+    document.getElementById('p-email').value = '';
+    await loadParticipantes();
+  } else {
+    const e = r ? await r.json() : { detail: 'Error' };
+    alert(e.detail || 'No se pudo crear');
+  }
+}
+
+loadParticipantes();
+</script>
+{% endblock %}

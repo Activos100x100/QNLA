@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}QNLA{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --qnla-primary: #1a1a2e;
+      --qnla-accent:  #e94560;
+      --qnla-gold:    #f5a623;
+    }
+    body { background: #f8f9fa; }
+    .qnla-sidebar {
+      min-height: 100vh;
+      background: var(--qnla-primary);
+      color: #fff;
+      width: 240px;
+      flex-shrink: 0;
+    }
+    .qnla-sidebar .brand {
+      padding: 1.5rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: .05em;
+      color: var(--qnla-gold);
+    }
+    .qnla-sidebar .nav-link {
+      color: rgba(255,255,255,.75);
+      padding: .6rem 1rem;
+      border-radius: 6px;
+      margin: 2px 8px;
+      font-size: .9rem;
+    }
+    .qnla-sidebar .nav-link:hover,
+    .qnla-sidebar .nav-link.active { background: var(--qnla-accent); color: #fff; }
+    .qnla-topbar {
+      background: #fff;
+      border-bottom: 1px solid #dee2e6;
+      padding: .6rem 1.5rem;
+    }
+    .qnla-main { flex: 1; padding: 2rem; overflow-y: auto; }
+    #qnla-user-badge { font-size: .85rem; }
+  </style>
+  {% block styles %}{% endblock %}
+</head>
+<body>
+
+<div class="d-flex" id="qnla-wrapper">
+
+  <!-- Sidebar -->
+  <nav class="qnla-sidebar d-flex flex-column">
+    <div class="brand">
+      🌍 QNLA
+    </div>
+    <ul class="nav flex-column mt-3 flex-grow-1" id="qnla-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="/qnla/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/qnla/partidos"><i class="bi bi-calendar3 me-2"></i>Partidos</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/qnla/ranking"><i class="bi bi-trophy me-2"></i>Ranking</a>
+      </li>
+      <!-- Admin only -->
+      <li class="nav-item qnla-admin-only" style="display:none">
+        <div class="text-uppercase text-muted px-3 mt-3 mb-1" style="font-size:.7rem;letter-spacing:.08em">Admin</div>
+      </li>
+      <li class="nav-item qnla-admin-only" style="display:none">
+        <a class="nav-link" href="/qnla/admin/torneos"><i class="bi bi-gear me-2"></i>Torneos</a>
+      </li>
+      <li class="nav-item qnla-admin-only" style="display:none">
+        <a class="nav-link" href="/qnla/admin/resultados"><i class="bi bi-pencil-square me-2"></i>Resultados</a>
+      </li>
+      <li class="nav-item qnla-admin-only" style="display:none">
+        <a class="nav-link" href="/qnla/admin/participantes"><i class="bi bi-people me-2"></i>Participantes</a>
+      </li>
+    </ul>
+    <div class="p-3 border-top border-secondary">
+      <button class="btn btn-sm btn-outline-light w-100" onclick="qnlaLogout()">
+        <i class="bi bi-box-arrow-right me-1"></i>Salir
+      </button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="d-flex flex-column flex-grow-1">
+    <div class="qnla-topbar d-flex align-items-center justify-content-between">
+      <span class="fw-semibold text-muted">{% block page_title %}{% endblock %}</span>
+      <span id="qnla-user-badge" class="badge bg-secondary">Cargando…</span>
+    </div>
+    <div class="qnla-main">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+function qnlaUserEmail() { return (localStorage.getItem('usuario_email') || '').trim().toLowerCase(); }
+function qnlaUserName()  { return (localStorage.getItem('usuario_name') || '').trim(); }
+function qnlaLogout() {
+  localStorage.removeItem('usuario_email');
+  localStorage.removeItem('usuario_name');
+  localStorage.removeItem('usuario_picture');
+  window.location.href = '/';
+}
+function qnlaAuthHeaders() {
+  return {
+    'x-user-email': qnlaUserEmail(),
+    'x-user-name': qnlaUserName(),
+    'Content-Type': 'application/json'
+  };
+}
+async function qnlaFetch(url, opts = {}) {
+  opts.headers = { ...qnlaAuthHeaders(), ...(opts.headers || {}) };
+  const r = await fetch(url, opts);
+  if (r.status === 401) {
+    alert('No estás autorizado en la quiniela. Verifica tu acceso.');
+    window.location.href = '/';
+    return null;
+  }
+  return r;
+}
+
+// ── Init session display ──────────────────────────────────────────────────────
+(async function () {
+  const email = qnlaUserEmail();
+  if (!email) { window.location.href = '/'; return; }
+
+  // highlight active nav link
+  document.querySelectorAll('.qnla-sidebar .nav-link').forEach(a => {
+    if (a.href === location.href) a.classList.add('active');
+  });
+
+  document.getElementById('qnla-user-badge').textContent = qnlaUserName() || email;
+
+  const rAdmin = await qnlaFetch('/qnla/torneos/admin-mode');
+  if (rAdmin && rAdmin.ok) {
+    const mode = await rAdmin.json();
+    if (mode && mode.is_admin) {
+      document.querySelectorAll('.qnla-admin-only').forEach(el => el.style.display = '');
+    }
+  }
+
+  const r = await fetch('/qnla/pronosticos/me', { headers: qnlaAuthHeaders() });
+  if (r && r.ok) {
+    const me = await r.json();
+    window.QNLA_ME = me;
+    if (me.es_admin) {
+      document.querySelectorAll('.qnla-admin-only').forEach(el => el.style.display = '');
+    }
+  } else {
+    // Usuario con sesión Google pero sin participante activo en el torneo.
+    // No redirigir para permitir acceso a pantallas públicas/admin-mode.
+    window.QNLA_ME = null;
+  }
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,225 @@
+{% extends "qnla/layout.html" %}
+{% block title %}Dashboard – QNLA{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">🏆 Torneos activos</div>
+      <div class="card-body p-0">
+        <div class="px-3 py-2 small text-muted border-bottom">Haz doble clic en una fila para seleccionar el torneo.</div>
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr><th>Nombre</th><th>Año</th><th>Inicio</th><th>Fin</th><th>Cierre inscripción</th></tr>
+          </thead>
+          <tbody id="torneos-activos-body">
+            <tr><td colspan="5" class="text-center text-muted">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span style="font-size:2.2rem">⚽</span>
+        <div>
+          <div class="text-muted small">Partidos totales</div>
+          <div class="fw-bold fs-4" id="stat-partidos">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span style="font-size:2.2rem">📋</span>
+        <div>
+          <div class="text-muted small">Mis pronósticos</div>
+          <div class="fw-bold fs-4" id="stat-pronosticos">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span style="font-size:2.2rem">🏅</span>
+        <div>
+          <div class="text-muted small">Mis puntos</div>
+          <div class="fw-bold fs-4" id="stat-puntos">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <span style="font-size:2.2rem">🏆</span>
+        <div>
+          <div class="text-muted small">Mi posición</div>
+          <div class="fw-bold fs-4" id="stat-posicion">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Próximos partidos</div>
+      <div class="card-body p-0">
+        <div id="proximos-partidos" class="list-group list-group-flush">
+          <div class="list-group-item text-muted">Cargando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Top 5 Ranking</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th>#</th><th>Participante</th><th class="text-end">Pts</th></tr>
+          </thead>
+          <tbody id="top-ranking">
+            <tr><td colspan="3" class="text-muted text-center">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function () {
+  const me = window.QNLA_ME;
+  const torneosBody = document.getElementById('torneos-activos-body');
+  const rankingBody = document.getElementById('top-ranking');
+  const proximosEl = document.getElementById('proximos-partidos');
+  const statPartidos = document.getElementById('stat-partidos');
+  const statPuntos = document.getElementById('stat-puntos');
+  const statPosicion = document.getElementById('stat-posicion');
+  const statPronosticos = document.getElementById('stat-pronosticos');
+
+  let torneos = [];
+  let selectedTorneoId = null;
+
+  function setSelectedRow() {
+    const rows = torneosBody.querySelectorAll('tr[data-torneo-id]');
+    rows.forEach((row) => {
+      const isSelected = Number(row.dataset.torneoId) === Number(selectedTorneoId);
+      row.classList.toggle('table-primary', isSelected);
+    });
+  }
+
+  async function loadDashboardForTorneo(tId) {
+    if (!tId) {
+      rankingBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">Selecciona un torneo con doble clic</td></tr>';
+      proximosEl.innerHTML = '<div class="list-group-item text-muted">Selecciona un torneo con doble clic para ver partidos</div>';
+      return;
+    }
+
+    // Ranking del torneo (público)
+    const rRank = await fetch(`/qnla/ranking/${tId}`);
+    if (rRank && rRank.ok) {
+      const ranking = await rRank.json();
+      rankingBody.innerHTML = ranking.slice(0, 5).map(r =>
+        `<tr${me && r.participante_id == me.id ? ' class="table-warning"' : ''}>
+          <td>${r.posicion}</td><td>${r.nombre}</td><td class="text-end fw-bold">${r.puntos_totales}</td>
+        </tr>`
+      ).join('') || '<tr><td colspan="3" class="text-muted text-center">Sin datos</td></tr>';
+
+      if (me) {
+        const yo = ranking.find(r => r.participante_id == me.id);
+        if (yo) {
+          statPuntos.textContent = yo.puntos_totales;
+          statPosicion.textContent = `#${yo.posicion}`;
+          statPronosticos.textContent = yo.partidos_pronosticados;
+        }
+      }
+    } else {
+      rankingBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">No se pudo cargar el ranking</td></tr>';
+    }
+
+    // Partidos del torneo
+    const rPart = await qnlaFetch(`/qnla/admin/partidos/torneo/${tId}`);
+    if (rPart && rPart.ok) {
+      const partidos = await rPart.json();
+      statPartidos.textContent = partidos.length;
+
+      const proximos = partidos
+        .filter(p => !p.finalizado)
+        .sort((a, b) => new Date(a.fecha_partido) - new Date(b.fecha_partido))
+        .slice(0, 5);
+
+      proximosEl.innerHTML = proximos.map(p =>
+        `<div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">${p.seleccion_local_nombre ?? '?'} vs ${p.seleccion_visitante_nombre ?? '?'}</span>
+            <span class="badge bg-secondary">${p.fecha_partido ? new Date(p.fecha_partido).toLocaleDateString('es') : 'Sin fecha'}</span>
+          </div>
+        </div>`
+      ).join('') || '<div class="list-group-item text-muted">No hay partidos próximos</div>';
+    } else {
+      proximosEl.innerHTML = '<div class="list-group-item text-muted">No se pudieron cargar los partidos</div>';
+    }
+  }
+
+  // Cargar torneos activos y habilitar selección por doble clic
+  const rTorneos = await fetch('/qnla/torneos/activos');
+  if (!rTorneos || !rTorneos.ok) {
+    torneosBody.innerHTML = '<tr><td colspan="5" class="text-muted text-center">Error al cargar torneos</td></tr>';
+    rankingBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">No disponible</td></tr>';
+    proximosEl.innerHTML = '<div class="list-group-item text-muted">No disponible</div>';
+    return;
+  }
+
+  torneos = await rTorneos.json();
+  torneosBody.innerHTML = torneos.map(t => `
+    <tr data-torneo-id="${t.id}" style="cursor:pointer" title="Doble clic para seleccionar este torneo">
+      <td class="fw-semibold">${t.nombre}</td>
+      <td>${t.anio}</td>
+      <td>${t.fecha_inicio ?? '–'}</td>
+      <td>${t.fecha_fin ?? '–'}</td>
+      <td>${t.cierre_inscripcion ? new Date(t.cierre_inscripcion).toLocaleString('es') : '–'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="text-muted text-center">Sin torneos activos</td></tr>';
+
+  const stored = Number(localStorage.getItem('qnla_selected_torneo_id') || 0);
+  if (stored && torneos.some(t => t.id === stored)) {
+    selectedTorneoId = stored;
+  } else if (me?.torneo_id && torneos.some(t => t.id === me.torneo_id)) {
+    selectedTorneoId = me.torneo_id;
+  } else if (torneos.length > 0) {
+    selectedTorneoId = torneos[0].id;
+  }
+
+  torneosBody.querySelectorAll('tr[data-torneo-id]').forEach((row) => {
+    row.addEventListener('dblclick', async () => {
+      selectedTorneoId = Number(row.dataset.torneoId);
+      localStorage.setItem('qnla_selected_torneo_id', String(selectedTorneoId));
+      setSelectedRow();
+      await loadDashboardForTorneo(selectedTorneoId);
+    });
+  });
+
+  setSelectedRow();
+  await loadDashboardForTorneo(selectedTorneoId);
+
+  if (!me) {
+    statPronosticos.textContent = '–';
+    statPuntos.textContent = '–';
+    statPosicion.textContent = '–';
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f8;
+}
+
+.container{
+display:flex;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:260px;
+background:black;
+color:white;
+padding:20px;
+}
+
+.logo img{
+width:140px;
+margin-bottom:30px;
+}
+
+.menu{
+list-style:none;
+padding:0;
+}
+
+.menu-item{
+margin-bottom:15px;
+}
+
+.menu-item span{
+cursor:pointer;
+display:block;
+padding:10px;
+}
+
+.submenu{
+display:none;
+padding-left:20px;
+}
+
+.submenu li{
+margin:8px 0;
+}
+
+.submenu a{
+color:white;
+text-decoration:none;
+}
+
+
+/* CONTENIDO */
+
+.content{
+flex:1;
+background:white;
+position:relative;
+padding:40px;
+}
+
+/* LOGO DIFUMINADO */
+
+.background-logo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:400px;
+height:400px;
+background:url('/static/img/logo.png') no-repeat center;
+background-size:contain;
+opacity:0.05;
+pointer-events:none;
+}
+
+.page{
+position:relative;
+z-index:2;
+}
+
+/* FORM */
+
+.form-row{
+margin-bottom:15px;
+}
+
+input, select, textarea{
+	padding:8px;
+	width:100%;
+	max-width:520px;
+	box-sizing:border-box;
+}
+
+button{
+padding:10px 20px;
+background:#3498db;
+border:none;
+color:white;
+}

@@ -1,0 +1,139 @@
+{% extends "qnla/layout.html" %}
+{% block title %}Partidos – QNLA{% endblock %}
+{% block page_title %}Partidos y Pronósticos{% endblock %}
+
+{% block content %}
+<div id="partidos-container">
+  <div class="text-muted">Cargando partidos…</div>
+</div>
+
+<!-- Modal pronóstico -->
+<div class="modal fade" id="pronosticoModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pronóstico</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center fw-semibold" id="modal-matchup"></p>
+        <div class="row g-2 align-items-center">
+          <div class="col-5">
+            <label class="form-label small">Local</label>
+            <input type="number" class="form-control text-center" id="prono-local" min="0" value="0">
+          </div>
+          <div class="col-2 text-center fw-bold text-muted">-</div>
+          <div class="col-5">
+            <label class="form-label small">Visitante</label>
+            <input type="number" class="form-control text-center" id="prono-visitante" min="0" value="0">
+          </div>
+        </div>
+        <div class="alert alert-danger mt-2" id="prono-error" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger btn-sm" id="btn-guardar-prono">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let _currentPartidoId = null;
+const modal = new bootstrap.Modal(document.getElementById('pronosticoModal'));
+
+(async function load() {
+  const me = window.QNLA_ME;
+  if (!me) return;
+
+  const [rPart, rMisPronos] = await Promise.all([
+    qnlaFetch(`/qnla/admin/partidos/torneo/${me.torneo_id}`),
+    qnlaFetch(`/qnla/pronosticos/torneo/${me.torneo_id}`),
+  ]);
+
+  if (!rPart || !rPart.ok) return;
+  const partidos = await rPart.json();
+  const pronos = rMisPronos && rMisPronos.ok ? await rMisPronos.json() : [];
+  const pronosMap = Object.fromEntries(pronos.map(pr => [pr.partido_id, pr]));
+
+  const now = new Date();
+  const grupos = { PROGRAMADO: [], EN_JUEGO: [], FINALIZADO: [] };
+  partidos.forEach(p => (grupos[p.estado] || grupos['FINALIZADO']).push(p));
+
+  const container = document.getElementById('partidos-container');
+  container.innerHTML = '';
+
+  const labels = { PROGRAMADO: '📅 Próximos', EN_JUEGO: '🔴 En juego', FINALIZADO: '✅ Finalizados' };
+
+  for (const [estado, lista] of Object.entries(grupos)) {
+    if (!lista.length) continue;
+    const section = document.createElement('div');
+    section.className = 'mb-4';
+    section.innerHTML = `<h6 class="text-muted text-uppercase fw-bold mb-2">${labels[estado]}</h6>`;
+
+    lista.forEach(partido => {
+      const cerrado = new Date(partido.cierre_pronostico) <= now;
+      const miProno = pronosMap[partido.id];
+      const card = document.createElement('div');
+      card.className = 'card border-0 shadow-sm mb-2';
+      card.innerHTML = `
+        <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <span class="fw-semibold">${partido.seleccion_local_nombre ?? '?'}</span>
+            <span class="mx-2 text-muted">vs</span>
+            <span class="fw-semibold">${partido.seleccion_visitante_nombre ?? '?'}</span>
+            <div class="text-muted small">${new Date(partido.fecha_hora).toLocaleString('es')}</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            ${partido.estado === 'FINALIZADO'
+              ? `<span class="badge bg-dark fs-6">${partido.goles_local} – ${partido.goles_visitante}</span>`
+              : ''}
+            ${miProno
+              ? `<span class="badge bg-success">Mi pronóstico: ${miProno.goles_local}-${miProno.goles_visitante}${miProno.puntos_obtenidos != null ? ' ('+miProno.puntos_obtenidos+'pts)' : ''}</span>`
+              : ''}
+            ${estado === 'PROGRAMADO' && !cerrado
+              ? `<button class="btn btn-sm btn-outline-danger" onclick="abrirPronostico(${partido.id}, '${partido.seleccion_local_nombre} vs ${partido.seleccion_visitante_nombre}', ${miProno ? miProno.goles_local : 0}, ${miProno ? miProno.goles_visitante : 0})">
+                  ${miProno ? '✏️ Editar' : '+ Pronosticar'}
+                </button>`
+              : ''}
+          </div>
+        </div>`;
+      section.appendChild(card);
+    });
+
+    container.appendChild(section);
+  }
+})();
+
+function abrirPronostico(id, matchup, gl = 0, gv = 0) {
+  _currentPartidoId = id;
+  document.getElementById('modal-matchup').textContent = matchup;
+  document.getElementById('prono-local').value = gl;
+  document.getElementById('prono-visitante').value = gv;
+  document.getElementById('prono-error').style.display = 'none';
+  modal.show();
+}
+
+document.getElementById('btn-guardar-prono').addEventListener('click', async () => {
+  const errEl = document.getElementById('prono-error');
+  errEl.style.display = 'none';
+  const body = {
+    partido_id: _currentPartidoId,
+    goles_local: parseInt(document.getElementById('prono-local').value, 10),
+    goles_visitante: parseInt(document.getElementById('prono-visitante').value, 10),
+  };
+  const r = await qnlaFetch('/qnla/pronosticos/', { method: 'POST', body: JSON.stringify(body) });
+  if (!r) return;
+  if (!r.ok) {
+    const err = await r.json();
+    errEl.textContent = err.detail || 'Error al guardar';
+    errEl.style.display = 'block';
+    return;
+  }
+  modal.hide();
+  location.reload();
+});
+</script>
+{% endblock %}

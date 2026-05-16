@@ -1,0 +1,11 @@
+venv
+__pycache__
+*.pyc
+.git
+.gitignore
+.env
+app/Archivo .env
+app/google-oauth.json
+app/core/auth/google-oauth.json
+app/service-account.json
+app/tokens
