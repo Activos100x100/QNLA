@@ -10,9 +10,11 @@ from app.qnla.routers import pages_router, api_torneos_router, api_torneos_publi
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
 
+
+# Página de inicio: redirigir al dashboard de QNLA
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
-    return templates.TemplateResponse("qnla/admin_torneos.html", {"request": request})
+    return templates.TemplateResponse("qnla/dashboard.html", {"request": request})
 
 # Incluir los routers de páginas y API de torneos
 app.include_router(pages_router)
