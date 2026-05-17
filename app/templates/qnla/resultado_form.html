@@ -16,10 +16,15 @@
 {% block scripts %}
 <script>
 async function loadTorneos() {
-  const r = await qnlaFetch('/qnla/admin/torneos/');
-  if (!r || !r.ok) return;
-  const torneos = await r.json();
+  let torneos = await qnlaFetch('/qnla/torneos/activos');
+  if (torneos && typeof torneos.json === 'function') {
+    torneos = await torneos.json();
+  }
   const sel = document.getElementById('torneo-select');
+  if (!Array.isArray(torneos) || !torneos.length) {
+    sel.innerHTML = '<option value="">No hay torneos</option>';
+    return;
+  }
   sel.innerHTML = torneos.map(t => `<option value="${t.id}">${t.nombre} ${t.anio}</option>`).join('');
   if (torneos.length) loadPartidos(torneos[0].id);
 }
@@ -58,6 +63,9 @@ async function guardarResultado(partidoId) {
 }
 
 document.getElementById('torneo-select').addEventListener('change', (e) => loadPartidos(e.target.value));
+
+// Llamar a loadTorneos al cargar la página
+window.addEventListener('DOMContentLoaded', loadTorneos);
 loadTorneos();
 </script>
 {% endblock %}

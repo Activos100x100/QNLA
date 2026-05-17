@@ -66,18 +66,15 @@
       <li class="nav-item">
         <a class="nav-link" href="/qnla/ranking"><i class="bi bi-trophy me-2"></i>Ranking</a>
       </li>
-      <!-- Admin only -->
+      <!-- Menú de Administrador de Quinielas -->
       <li class="nav-item qnla-admin-only" style="display:none">
-        <div class="text-uppercase text-muted px-3 mt-3 mb-1" style="font-size:.7rem;letter-spacing:.08em">Admin</div>
+        <div class="text-uppercase text-warning px-3 mt-3 mb-1" style="font-size:.8rem;letter-spacing:.08em;font-weight:bold">Administrador de Quinielas</div>
       </li>
       <li class="nav-item qnla-admin-only" style="display:none">
-        <a class="nav-link" href="/qnla/admin/torneos"><i class="bi bi-gear me-2"></i>Torneos</a>
+        <a class="nav-link" href="/qnla/admin/resultados"><i class="bi bi-pencil-square me-2"></i>Carga de Resultados</a>
       </li>
       <li class="nav-item qnla-admin-only" style="display:none">
-        <a class="nav-link" href="/qnla/admin/resultados"><i class="bi bi-pencil-square me-2"></i>Resultados</a>
-      </li>
-      <li class="nav-item qnla-admin-only" style="display:none">
-        <a class="nav-link" href="/qnla/admin/participantes"><i class="bi bi-people me-2"></i>Participantes</a>
+        <a class="nav-link" href="/qnla/admin/torneos"><i class="bi bi-gear me-2"></i>Creación de Torneos</a>
       </li>
     </ul>
     <div class="p-3 border-top border-secondary">
@@ -141,7 +138,7 @@ async function qnlaFetch(url, opts = {}) {
 
   document.getElementById('qnla-user-badge').textContent = qnlaUserName() || email;
 
-  const rAdmin = await qnlaFetch('/qnla/torneos/admin-mode');
+  const rAdmin = await qnlaFetch('/api/torneos-public/admin-mode');
   if (rAdmin && rAdmin.ok) {
     const mode = await rAdmin.json();
     if (mode && mode.is_admin) {

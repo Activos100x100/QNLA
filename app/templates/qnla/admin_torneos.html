@@ -71,320 +71,225 @@
           <th>Fin</th>
           <th>Cierre inscripción</th>
           <th>Activo</th>
-          <th id="th-eliminar" style="display:none"></th>
+          <th id="th-eliminar" style="display:none;"></th>
         </tr>
       </thead>
-      <tbody id="torneos-body"><tr><td colspan="7" class="text-center text-muted">Cargando…</td></tr></tbody>
+      <tbody id="torneos-body">
+        <tr><td colspan="7" class="text-center text-muted">Cargando…</td></tr>
+      </tbody>
     </table>
-<script>
-let qnlaTorneosIsAdmin = false;
-let qnlaSelectedTorneoId = null;
+  </div>
+</div>
 
-function toDatetimeLocal(value) {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
-  const p = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+<script>
+// Variables globales
+let qnlaSelectedTorneoId = null;
+let qnlaTorneos = [];
+
+// Funciones básicas
+function qnlaUserEmail() { return (localStorage.getItem('usuario_email') || '').trim().toLowerCase(); }
+function qnlaUserName() { return (localStorage.getItem('usuario_name') || '').trim(); }
+function qnlaAuthHeaders() {
+  return {
+    'x-user-email': qnlaUserEmail(),
+    'x-user-name': qnlaUserName(),
+    'Content-Type': 'application/json'
+  };
+}
+async function qnlaFetch(url, opts = {}) {
+  opts.headers = { ...qnlaAuthHeaders(), ...(opts.headers || {}) };
+  const r = await fetch(url, opts);
+  if (r.status === 401) {
+    alert('No estás autorizado. Verifica tu acceso.');
+    window.location.href = '/';
+    return null;
+  }
+  return r;
 }
 
-function loadTorneoConfigInForm(torneo) {
+// Cargar datos de torneo en el formulario
+function loadTorneoForm(torneo) {
+  if (!torneo) return;
   document.getElementById('t-nombre').value = torneo.nombre || '';
-  document.getElementById('t-anio').value = torneo.anio ?? 2026;
+  document.getElementById('t-anio').value = torneo.anio || 2026;
   document.getElementById('t-desc').value = torneo.descripcion || '';
   document.getElementById('t-fecha-inicio').value = (torneo.fecha_inicio || '').slice(0, 10);
   document.getElementById('t-fecha-fin').value = (torneo.fecha_fin || '').slice(0, 10);
-  document.getElementById('t-cierre').value = toDatetimeLocal(torneo.cierre_inscripcion);
-  document.getElementById('t-activo').checked = !!torneo.activo;
+  document.getElementById('t-activo').checked = torneo.activo === true;
 }
 
-function loadReglasInForm(reglas) {
-  document.getElementById('t-puntos-exacto').value = reglas?.puntos_exacto ?? 3;
-  document.getElementById('t-puntos-ganador').value = reglas?.puntos_ganador ?? 1;
-  document.getElementById('t-puntos-fallo').value = reglas?.puntos_fallo ?? 0;
+// Habilitar/deshabilitar botones
+function refreshButtonState() {
+  const hasSelected = qnlaSelectedTorneoId !== null;
+  document.getElementById('btn-actualizar-torneo').disabled = !hasSelected;
+  document.getElementById('btn-eliminar-torneo').disabled = !hasSelected;
 }
 
-async function fetchAndLoadReglas(torneoId) {
-  if (!torneoId) {
-    loadReglasInForm(null);
-    return;
-  }
-  try {
-    const r = await fetch(`/qnla/torneos/${torneoId}/reglas`);
-    if (r && r.ok) {
-      const reglas = await r.json();
-      loadReglasInForm(reglas);
-      return;
-    }
-  } catch (_) {
-    // noop
-  }
-  loadReglasInForm(null);
+// Resaltar fila seleccionada
+function setSelectedRow(tr) {
+  document.querySelectorAll('#torneos-body tr').forEach(r => r.classList.remove('table-active'));
+  if (tr) tr.classList.add('table-active');
 }
 
-function setSelectedRow(rowEl) {
-  document.querySelectorAll('#torneos-body tr.table-primary').forEach((tr) => tr.classList.remove('table-primary'));
-  if (rowEl) rowEl.classList.add('table-primary');
-}
-
-function setAdminStatus(message, type = 'info') {
-  const box = document.getElementById('torneos-admin-status');
-  const btn = document.getElementById('btn-crear-torneo');
-  const btnUpdate = document.getElementById('btn-actualizar-torneo');
-  const btnDelete = document.getElementById('btn-eliminar-torneo');
-  box.className = `alert alert-${type} py-2 px-3 mb-3`;
-  box.textContent = message;
-  box.style.display = 'block';
-  btn.disabled = !qnlaTorneosIsAdmin;
-  btnUpdate.disabled = !qnlaTorneosIsAdmin || !qnlaSelectedTorneoId;
-  btnDelete.disabled = !qnlaTorneosIsAdmin || !qnlaSelectedTorneoId;
-}
-
-function refreshUpdateButtonState() {
-  const btnUpdate = document.getElementById('btn-actualizar-torneo');
-  const btnDelete = document.getElementById('btn-eliminar-torneo');
-  btnUpdate.disabled = !qnlaTorneosIsAdmin || !qnlaSelectedTorneoId;
-  btnDelete.disabled = !qnlaTorneosIsAdmin || !qnlaSelectedTorneoId;
-}
-
-function clearTorneoForm() {
+// Limpiar formulario
+function clearForm() {
+  qnlaSelectedTorneoId = null;
   document.getElementById('t-nombre').value = '';
   document.getElementById('t-anio').value = 2026;
   document.getElementById('t-desc').value = '';
   document.getElementById('t-fecha-inicio').value = '';
   document.getElementById('t-fecha-fin').value = '';
-  document.getElementById('t-cierre').value = '';
   document.getElementById('t-activo').checked = true;
-  loadReglasInForm(null);
+  refreshButtonState();
 }
 
-async function loadTorneos(){
+// Cargar torneos
+async function loadTorneos() {
+  console.log('JS CARGADO - Iniciando carga de torneos');
   const body = document.getElementById('torneos-body');
-  let r = await qnlaFetch('/qnla/admin/torneos/');
-
-  if (r && r.ok) {
-    qnlaTorneosIsAdmin = true;
-    setAdminStatus('Modo administrador activo: puedes crear y gestionar torneos.', 'success');
-  } else {
-    qnlaTorneosIsAdmin = false;
-    setAdminStatus('Modo solo lectura: no tienes permisos de administrador para crear torneos.', 'warning');
-    // Fallback para usuarios sin sesión admin: mostrar torneos activos
-    r = await fetch('/qnla/torneos/activos');
-  }
-
-  if (!r || !r.ok) {
-    body.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se pudieron cargar los torneos</td></tr>';
-    return;
-  }
-
-  const rows = await r.json();
-
-  // Mostrar columna eliminar solo a admins
-  const thEliminar = document.getElementById('th-eliminar');
-  if (thEliminar) thEliminar.style.display = qnlaTorneosIsAdmin ? '' : 'none';
-
-  const colSpan = qnlaTorneosIsAdmin ? 8 : 7;
-  body.innerHTML = rows.map((t, idx) => `
-    <tr class="torneo-row" data-idx="${idx}" style="cursor:pointer" title="Haz clic para cargar la configuración del torneo">
-      <td>${t.id}</td>
-      <td>${t.nombre}</td>
-      <td>${t.anio}</td>
-      <td>${t.fecha_inicio || '-'}</td>
-      <td>${t.fecha_fin || '-'}</td>
-      <td>${t.cierre_inscripcion ? new Date(t.cierre_inscripcion).toLocaleString() : '-'}</td>
-      <td>${t.activo ? '✅' : '❌'}</td>
-      ${qnlaTorneosIsAdmin ? `<td class="text-center" style="width:44px">
-        <button class="btn btn-sm btn-outline-danger py-0 px-1 btn-del-row" data-id="${t.id}" data-nombre="${t.nombre.replace(/"/g,'&quot;')}" title="Eliminar ${t.nombre}">
-          <i class="bi bi-trash"></i>
-        </button>
-      </td>` : ''}
-    </tr>
-  `).join('') || `<tr><td colspan="${colSpan}" class="text-center text-muted">Sin torneos</td></tr>`;
-
-  // Botones de papelera por fila
-  body.querySelectorAll('.btn-del-row').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation(); // no disparar click de fila
-      const tid = Number(btn.dataset.id);
-      const tnombre = btn.dataset.nombre;
-      const ok = confirm(`Vas a eliminar el torneo "${tnombre}" y TODAS sus dependencias (partidos, pronósticos, reglas de puntaje, fases, grupos, selecciones, sedes y participantes).\n\n¿Continuar?`);
-      if (!ok) return;
-      const r = await qnlaFetch(`/qnla/admin/torneos/${tid}`, { method: 'DELETE' });
-      if (!r || (r.status !== 204 && !r.ok)) {
-        const err = r ? await r.json().catch(() => ({})) : {};
-        alert(err.detail || 'No se pudo eliminar el torneo');
-        return;
-      }
-      if (qnlaSelectedTorneoId === tid) {
-        qnlaSelectedTorneoId = null;
-        clearTorneoForm();
-      }
-      await loadTorneos();
-    });
-  });
-
-  body.querySelectorAll('tr.torneo-row').forEach((tr) => {
-    tr.addEventListener('click', async () => {
-      const idx = Number(tr.dataset.idx);
-      const torneo = rows[idx];
-      qnlaSelectedTorneoId = torneo?.id ?? null;
-      loadTorneoConfigInForm(torneo);
-      await fetchAndLoadReglas(qnlaSelectedTorneoId);
-      setSelectedRow(tr);
-      refreshUpdateButtonState();
-    });
-  });
-
-  // Mantener selección visual tras refresco si ya había un torneo elegido
-  if (qnlaSelectedTorneoId) {
-    const idx = rows.findIndex((t) => t.id === qnlaSelectedTorneoId);
-    if (idx >= 0) {
-      const tr = body.querySelector(`tr.torneo-row[data-idx="${idx}"]`);
-      if (tr) {
-        setSelectedRow(tr);
-        loadTorneoConfigInForm(rows[idx]);
-        await fetchAndLoadReglas(qnlaSelectedTorneoId);
-      }
+  
+  try {
+    const r = await qnlaFetch('/api/torneos-public/activos');
+    if (!r || !r.ok) {
+      body.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error cargando torneos</td></tr>';
+      return;
     }
+    qnlaTorneos = await r.json();
+    console.log('Torneos recibidos:', qnlaTorneos);
+    
+    if (!Array.isArray(qnlaTorneos) || qnlaTorneos.length === 0) {
+      body.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sin torneos</td></tr>';
+      return;
+    }
+    
+    body.innerHTML = qnlaTorneos.map((t, idx) => `
+      <tr data-torneo-id="${t.id}" style="cursor:pointer;" title="Haz clic para seleccionar">
+        <td>${t.id}</td>
+        <td>${t.nombre}</td>
+        <td>${t.anio}</td>
+        <td>${t.fecha_inicio || '-'}</td>
+        <td>${t.fecha_fin || '-'}</td>
+        <td>${t.cierre_inscripcion ? new Date(t.cierre_inscripcion).toLocaleString() : '-'}</td>
+        <td>${t.activo ? '✅' : '❌'}</td>
+      </tr>
+    `).join('');
+    
+    // Agregar event listeners a las filas
+    document.querySelectorAll('#torneos-body tr').forEach((tr) => {
+      tr.addEventListener('click', () => {
+        const torneoId = parseInt(tr.dataset.torneoId, 10);
+        const torneo = qnlaTorneos.find(t => t.id === torneoId);
+        if (torneo) {
+          qnlaSelectedTorneoId = torneo.id;
+          loadTorneoForm(torneo);
+          setSelectedRow(tr);
+          refreshButtonState();
+        }
+      });
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    body.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al procesar datos</td></tr>';
   }
-
-  refreshUpdateButtonState();
 }
 
+// Actualizar torneo
 async function actualizarTorneo() {
-  if (!qnlaTorneosIsAdmin) {
-    alert('Necesitas permisos de administrador para actualizar torneos.');
-    return;
-  }
   if (!qnlaSelectedTorneoId) {
-    alert('Selecciona un torneo de la tabla para actualizar.');
+    alert('Selecciona un torneo para actualizar');
     return;
   }
-
-  const fechaInicio = document.getElementById('t-fecha-inicio').value || null;
-  const fechaFin = document.getElementById('t-fecha-fin').value || null;
-  const cierre = document.getElementById('t-cierre').value || null;
-
-  if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
-    alert('La fecha fin debe ser mayor o igual a la fecha inicio');
-    return;
-  }
-
-  const torneoPayload = {
+  
+  const payload = {
     nombre: document.getElementById('t-nombre').value.trim(),
     anio: parseInt(document.getElementById('t-anio').value || '2026', 10),
     descripcion: document.getElementById('t-desc').value.trim() || null,
     activo: document.getElementById('t-activo').checked,
-    fecha_inicio: fechaInicio,
-    fecha_fin: fechaFin,
-    cierre_inscripcion: cierre ? new Date(cierre).toISOString() : null,
+    fecha_inicio: document.getElementById('t-fecha-inicio').value || null,
+    fecha_fin: document.getElementById('t-fecha-fin').value || null,
   };
-
-  const reglasPayload = {
-    puntos_exacto: parseInt(document.getElementById('t-puntos-exacto').value || '3', 10),
-    puntos_ganador: parseInt(document.getElementById('t-puntos-ganador').value || '1', 10),
-    puntos_fallo: parseInt(document.getElementById('t-puntos-fallo').value || '0', 10),
-  };
-
-  if (!torneoPayload.nombre) {
+  
+  if (!payload.nombre) {
     alert('Nombre requerido');
     return;
   }
-
-  const rTorneo = await qnlaFetch(`/qnla/admin/torneos/${qnlaSelectedTorneoId}`, {
+  
+  const r = await qnlaFetch(`/api/torneos/${qnlaSelectedTorneoId}`, {
     method: 'PATCH',
-    body: JSON.stringify(torneoPayload),
+    body: JSON.stringify(payload),
   });
-  if (!rTorneo || !rTorneo.ok) {
-    const err = rTorneo ? await rTorneo.json().catch(() => ({})) : {};
-    alert(err.detail || 'No se pudo actualizar el torneo');
-    return;
-  }
-
-  const rReglas = await qnlaFetch(`/qnla/admin/torneos/${qnlaSelectedTorneoId}/reglas`, {
-    method: 'PATCH',
-    body: JSON.stringify(reglasPayload),
-  });
-  if (!rReglas || !rReglas.ok) {
-    const err = rReglas ? await rReglas.json().catch(() => ({})) : {};
-    alert(err.detail || 'Se actualizó el torneo, pero fallaron las reglas de puntaje');
+  
+  if (r && r.ok) {
+    alert('Torneo actualizado correctamente');
     await loadTorneos();
-    return;
+  } else {
+    const err = r ? await r.json().catch(() => ({})) : {};
+    alert(err.detail || 'Error al actualizar el torneo');
   }
-
-  await loadTorneos();
-  alert('Torneo y reglas de puntaje actualizados correctamente.');
 }
 
+// Eliminar torneo
 async function eliminarTorneo() {
-  if (!qnlaTorneosIsAdmin) {
-    alert('Necesitas permisos de administrador para eliminar torneos.');
-    return;
-  }
   if (!qnlaSelectedTorneoId) {
-    alert('Selecciona un torneo de la tabla para eliminar.');
+    alert('Selecciona un torneo para eliminar');
     return;
   }
-
+  
   const nombre = document.getElementById('t-nombre').value || `ID ${qnlaSelectedTorneoId}`;
-  const ok = confirm(`Vas a eliminar el torneo "${nombre}" y TODAS sus dependencias (partidos, pronósticos, reglas de puntaje, fases, grupos, selecciones, sedes y participantes).\n\n¿Continuar?`);
+  const ok = confirm(`¿Estás seguro de que quieres eliminar el torneo "${nombre}"?`);
   if (!ok) return;
-
-  const r = await qnlaFetch(`/qnla/admin/torneos/${qnlaSelectedTorneoId}`, {
+  
+  const r = await qnlaFetch(`/api/torneos/${qnlaSelectedTorneoId}`, {
     method: 'DELETE',
   });
-
-  if (!r || (r.status !== 204 && !r.ok)) {
+  
+  if (r && (r.ok || r.status === 204)) {
+    alert('Torneo eliminado correctamente');
+    clearForm();
+    await loadTorneos();
+  } else {
     const err = r ? await r.json().catch(() => ({})) : {};
-    alert(err.detail || 'No se pudo eliminar el torneo');
-    return;
+    alert(err.detail || 'Error al eliminar el torneo');
   }
-
-  qnlaSelectedTorneoId = null;
-  clearTorneoForm();
-  await loadTorneos();
-  alert('Torneo eliminado con todas sus dependencias.');
 }
 
-async function crearTorneo(){
-  if (!qnlaTorneosIsAdmin) {
-    alert('Necesitas permisos de administrador para crear torneos.');
-    return;
-  }
-
-  const fechaInicio = document.getElementById('t-fecha-inicio').value || null;
-  const fechaFin = document.getElementById('t-fecha-fin').value || null;
-  const cierre = document.getElementById('t-cierre').value || null;
-
-  if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
-    alert('La fecha fin debe ser mayor o igual a la fecha inicio');
-    return;
-  }
-
-  const body = {
+// Crear torneo
+async function crearTorneo() {
+  const payload = {
     nombre: document.getElementById('t-nombre').value.trim(),
     anio: parseInt(document.getElementById('t-anio').value || '2026', 10),
     descripcion: document.getElementById('t-desc').value.trim() || null,
-    admin: (typeof qnlaUserName === 'function' ? qnlaUserName() : '') || (typeof qnlaUserEmail === 'function' ? qnlaUserEmail() : '') || null,
     activo: document.getElementById('t-activo').checked,
-    fecha_inicio: fechaInicio,
-    fecha_fin: fechaFin,
-    cierre_inscripcion: cierre ? new Date(cierre).toISOString() : null,
-    exacto_puntos: parseInt(document.getElementById('t-puntos-exacto').value || '3', 10),
-    ganador_empate_puntos: parseInt(document.getElementById('t-puntos-ganador').value || '1', 10),
-    fallo_puntos: parseInt(document.getElementById('t-puntos-fallo').value || '0', 10)
+    fecha_inicio: document.getElementById('t-fecha-inicio').value || null,
+    fecha_fin: document.getElementById('t-fecha-fin').value || null,
+    admin: qnlaUserName() || qnlaUserEmail(),
   };
-  if (!body.nombre) { alert('Nombre requerido'); return; }
-  const r = await qnlaFetch('/qnla/admin/torneos/', { method: 'POST', body: JSON.stringify(body) });
+  
+  if (!payload.nombre) {
+    alert('Nombre requerido');
+    return;
+  }
+  
+  const r = await qnlaFetch('/api/torneos/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  
   if (r && r.ok) {
-    clearTorneoForm();
+    alert('Torneo creado correctamente');
+    clearForm();
     await loadTorneos();
-  } else if (r) {
-    const err = await r.json().catch(() => ({}));
-    alert(err.detail || 'No se pudo crear el torneo');
+  } else {
+    const err = r ? await r.json().catch(() => ({})) : {};
+    alert(err.detail || 'Error al crear el torneo');
   }
 }
 
-loadTorneos();
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM listo - cargando torneos');
+  clearForm();
+  loadTorneos();
+});
 </script>
 {% endblock %}

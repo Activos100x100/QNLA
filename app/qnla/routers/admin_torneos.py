@@ -17,9 +17,9 @@ from app.qnla.models.partido import Partido
 from app.qnla.models.pronostico import Pronostico
 from app.qnla.schemas.torneo import TorneoCreate, TorneoUpdate, TorneoOut, ReglasPuntajeUpdate
 
-router = APIRouter(prefix="/qnla/admin/torneos", tags=["qnla-admin-torneos"])
+router = APIRouter(prefix="/api/torneos", tags=["api-torneos"])
 
-public_router = APIRouter(prefix="/qnla/torneos", tags=["qnla-torneos"])
+public_router = APIRouter(prefix="/api/torneos-public", tags=["api-torneos-public"])
 
 
 def _identity_candidates(request: Request) -> list[str]:

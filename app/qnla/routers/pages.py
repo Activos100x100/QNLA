@@ -1,9 +1,15 @@
 """Vistas HTML del panel de quiniela."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from app.qnla.database import get_db
+from app.qnla.models.torneo import Torneo
+from app.qnla.schemas.torneo import TorneoOut
 
 router = APIRouter(prefix="/qnla", tags=["qnla-pages"])
 templates = Jinja2Templates(directory="app/templates")
@@ -42,3 +48,11 @@ def participantes_page(request: Request):
 @router.get("/admin/torneos", response_class=HTMLResponse)
 def torneos_page(request: Request):
     return templates.TemplateResponse("qnla/admin_torneos.html", {"request": request})
+
+
+@router.get("/torneos/activos", response_model=list[TorneoOut])
+def torneos_activos(db: Session = Depends(get_db)):
+    """Retorna lista de torneos activos en JSON para el dashboard."""
+    stmt = select(Torneo).where(Torneo.activo == True).order_by(Torneo.anio.desc())
+    torneos = db.scalars(stmt).all()
+    return [TorneoOut.model_validate(t) for t in torneos]

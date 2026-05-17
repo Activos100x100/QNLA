@@ -46,23 +46,68 @@ const modal = new bootstrap.Modal(document.getElementById('pronosticoModal'));
 
 (async function load() {
   const me = window.QNLA_ME;
-  if (!me) return;
+  const container = document.getElementById('partidos-container');
+  
+  // Mostrar siempre el selector de torneos activos
+  let torneos = await qnlaFetch('/qnla/torneos/activos');
+  // Si la respuesta es un objeto Response, obtener el JSON
+  if (torneos && typeof torneos.json === 'function') {
+    torneos = await torneos.json();
+  }
+  if (!Array.isArray(torneos) || !torneos.length) {
+    container.innerHTML = '<div class="alert alert-warning">No hay torneos activos disponibles.</div>';
+    return;
+  }
+  let selector = '<div class="mb-3"><label class="form-label">Selecciona un torneo para ver los partidos:</label><select id="selector-torneo" class="form-select">';
+  selector += '<option value="">-- Elegir torneo --</option>';
+  for (const t of torneos) {
+    selector += `<option value="${t.id}">${t.nombre} (${t.anio})</option>`;
+  }
+  selector += '</select></div><div id="partidos-torneo"></div>';
+  container.innerHTML = selector;
+  document.getElementById('selector-torneo').addEventListener('change', async function() {
+    const torneoId = this.value;
+    const partidosDiv = document.getElementById('partidos-torneo');
+    if (!torneoId) {
+      partidosDiv.innerHTML = '';
+      return;
+    }
+    partidosDiv.innerHTML = '<div class="text-muted">Cargando partidos…</div>';
+    let partidos = await qnlaFetch(`/qnla/admin/partidos/torneo/${torneoId}`);
+    if (partidos && typeof partidos.json === 'function') {
+      partidos = await partidos.json();
+    }
+    if (!Array.isArray(partidos) || !partidos.length) {
+      partidosDiv.innerHTML = '<div class="alert alert-info">No hay partidos para este torneo.</div>';
+      return;
+    }
+    // Renderizar la tabla/lista de partidos
+    let html = '<table class="table table-sm"><thead><tr><th>Fecha</th><th>Local</th><th>Visitante</th></tr></thead><tbody>';
+    for (const p of partidos) {
+      html += `<tr><td>${new Date(p.fecha_partido).toLocaleString()}</td><td>${p.seleccion_local_nombre}</td><td>${p.seleccion_visitante_nombre}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    partidosDiv.innerHTML = html;
+  });
+  return;
 
-  const [rPart, rMisPronos] = await Promise.all([
-    qnlaFetch(`/qnla/admin/partidos/torneo/${me.torneo_id}`),
-    qnlaFetch(`/qnla/pronosticos/torneo/${me.torneo_id}`),
-  ]);
-
-  if (!rPart || !rPart.ok) return;
+  if (!rPart || !rPart.ok) {
+    container.innerHTML = '<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>Error al cargar los partidos</div>';
+    return;
+  }
+  
   const partidos = await rPart.json();
   const pronos = rMisPronos && rMisPronos.ok ? await rMisPronos.json() : [];
   const pronosMap = Object.fromEntries(pronos.map(pr => [pr.partido_id, pr]));
 
   const now = new Date();
   const grupos = { PROGRAMADO: [], EN_JUEGO: [], FINALIZADO: [] };
-  partidos.forEach(p => (grupos[p.estado] || grupos['FINALIZADO']).push(p));
+  partidos.forEach(p => {
+    const estado = p.estado || p.finalizado ? 'FINALIZADO' : 'PROGRAMADO';
+    if (!grupos[estado]) grupos[estado] = [];
+    grupos[estado].push(p);
+  });
 
-  const container = document.getElementById('partidos-container');
   container.innerHTML = '';
 
   const labels = { PROGRAMADO: '📅 Próximos', EN_JUEGO: '🔴 En juego', FINALIZADO: '✅ Finalizados' };
@@ -84,10 +129,10 @@ const modal = new bootstrap.Modal(document.getElementById('pronosticoModal'));
             <span class="fw-semibold">${partido.seleccion_local_nombre ?? '?'}</span>
             <span class="mx-2 text-muted">vs</span>
             <span class="fw-semibold">${partido.seleccion_visitante_nombre ?? '?'}</span>
-            <div class="text-muted small">${new Date(partido.fecha_hora).toLocaleString('es')}</div>
+            <div class="text-muted small">${new Date(partido.fecha_hora || partido.fecha_partido).toLocaleString('es')}</div>
           </div>
           <div class="d-flex align-items-center gap-2">
-            ${partido.estado === 'FINALIZADO'
+            ${partido.finalizado
               ? `<span class="badge bg-dark fs-6">${partido.goles_local} – ${partido.goles_visitante}</span>`
               : ''}
             ${miProno
