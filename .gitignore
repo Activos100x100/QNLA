@@ -27,3 +27,7 @@ app/google-oauth.json
 app/core/auth/google-oauth.json
 app/service-account.json
 app/tokens/
+
+# .NET artifacts
+dotnet-api/bin/
+dotnet-api/obj/
