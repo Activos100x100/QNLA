@@ -128,8 +128,15 @@ async function qnlaFetch(url, opts = {}) {
 
 // ── Init session display ──────────────────────────────────────────────────────
 (async function () {
+
+  // Permitir acceso a menú básico aunque no haya email (usuario no logueado)
   const email = qnlaUserEmail();
-  if (!email) { window.location.href = '/'; return; }
+  if (!email) {
+    document.getElementById('qnla-user-badge').textContent = 'Invitado';
+    // No redirigir, solo ocultar menú admin
+    document.querySelectorAll('.qnla-admin-only').forEach(el => el.style.display = 'none');
+    return;
+  }
 
   // highlight active nav link
   document.querySelectorAll('.qnla-sidebar .nav-link').forEach(a => {
