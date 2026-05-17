@@ -111,7 +111,7 @@ def obtener_reglas_torneo(torneo_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[TorneoOut])
-def listar_torneos(db: Session = Depends(get_db), _: bool = Depends(get_torneo_admin_access)):
+def listar_torneos(db: Session = Depends(get_db)):
     return db.scalars(select(Torneo).order_by(Torneo.anio.desc())).all()
 
 
@@ -120,7 +120,6 @@ def crear_torneo(
     request: Request,
     payload: TorneoCreate,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access),
 ):
     inferred_admin = payload.admin or (request.headers.get("x-user-name") or request.headers.get("x-user-email") or "").strip()
     torneo = Torneo(
@@ -149,7 +148,7 @@ def crear_torneo(
 
 
 @router.get("/{torneo_id}", response_model=TorneoOut)
-def obtener_torneo(torneo_id: int, db: Session = Depends(get_db), _: bool = Depends(get_torneo_admin_access_torneo)):
+def obtener_torneo(torneo_id: int, db: Session = Depends(get_db)):
     torneo = db.get(Torneo, torneo_id)
     if not torneo:
         raise HTTPException(status_code=404, detail="Torneo no encontrado")
@@ -161,7 +160,7 @@ def actualizar_torneo(
     torneo_id: int,
     payload: TorneoUpdate,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
+
 ):
     torneo = db.get(Torneo, torneo_id)
     if not torneo:
@@ -185,7 +184,6 @@ def actualizar_reglas_torneo(
     torneo_id: int,
     payload: ReglasPuntajeUpdate,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
 ):
     torneo = db.get(Torneo, torneo_id)
     if not torneo:
@@ -222,7 +220,6 @@ def actualizar_reglas_torneo(
 def eliminar_torneo(
     torneo_id: int,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
 ):
     torneo = db.get(Torneo, torneo_id)
     if not torneo:
@@ -256,7 +253,7 @@ def eliminar_torneo(
 # ── Participantes del torneo ────────────────────────────────────────────────
 
 @router.get("/{torneo_id}/participantes")
-def listar_participantes(torneo_id: int, db: Session = Depends(get_db), _: bool = Depends(get_torneo_admin_access_torneo)):
+def listar_participantes(torneo_id: int, db: Session = Depends(get_db)):
     rows = db.scalars(select(Participante).where(Participante.torneo_id == torneo_id)).all()
     return [{"id": p.id, "nombre": p.nombre, "email": p.email, "es_admin": p.es_admin, "activo": p.activo} for p in rows]
 
@@ -268,7 +265,6 @@ def crear_participante(
     email: str,
     es_admin: bool = False,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
 ):
     existing = db.scalars(
         select(Participante).where(Participante.torneo_id == torneo_id, Participante.email == email.lower())
@@ -298,7 +294,6 @@ def crear_fase(
     orden: int = 0,
     es_eliminatoria: bool = False,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
 ):
     fase = Fase(torneo_id=torneo_id, nombre=nombre, orden=orden, es_eliminatoria=es_eliminatoria)
     db.add(fase)
@@ -308,7 +303,7 @@ def crear_fase(
 
 
 @router.post("/{torneo_id}/grupos", status_code=status.HTTP_201_CREATED)
-def crear_grupo(torneo_id: int, nombre: str, db: Session = Depends(get_db), _: bool = Depends(get_torneo_admin_access_torneo)):
+def crear_grupo(torneo_id: int, nombre: str, db: Session = Depends(get_db)):
     grupo = Grupo(torneo_id=torneo_id, nombre=nombre)
     db.add(grupo)
     db.commit()
@@ -319,7 +314,7 @@ def crear_grupo(torneo_id: int, nombre: str, db: Session = Depends(get_db), _: b
 # ── Selecciones ─────────────────────────────────────────────────────────────
 
 @router.get("/{torneo_id}/selecciones")
-def listar_selecciones(torneo_id: int, db: Session = Depends(get_db), _: bool = Depends(get_torneo_admin_access_torneo)):
+def listar_selecciones(torneo_id: int, db: Session = Depends(get_db)):
     rows = db.scalars(select(Seleccion).where(Seleccion.torneo_id == torneo_id)).all()
     return [{"id": s.id, "nombre": s.nombre, "codigo_fifa": s.codigo_fifa, "grupo_id": s.grupo_id} for s in rows]
 
@@ -332,7 +327,6 @@ def crear_seleccion(
     grupo_id: int | None = None,
     bandera_url: str | None = None,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
 ):
     s = Seleccion(torneo_id=torneo_id, nombre=nombre, codigo_fifa=codigo_fifa.upper()[:3], grupo_id=grupo_id, bandera_url=bandera_url)
     db.add(s)
@@ -344,7 +338,7 @@ def crear_seleccion(
 # ── Sedes ────────────────────────────────────────────────────────────────────
 
 @router.get("/{torneo_id}/sedes")
-def listar_sedes(torneo_id: int, db: Session = Depends(get_db), _: bool = Depends(get_torneo_admin_access_torneo)):
+def listar_sedes(torneo_id: int, db: Session = Depends(get_db)):
     rows = db.scalars(select(Sede).where(Sede.torneo_id == torneo_id)).all()
     return [{"id": s.id, "nombre": s.nombre, "ciudad": s.ciudad, "pais": s.pais} for s in rows]
 
@@ -357,7 +351,6 @@ def crear_sede(
     pais: str,
     capacidad: int | None = None,
     db: Session = Depends(get_db),
-    _: bool = Depends(get_torneo_admin_access_torneo),
 ):
     sede = Sede(torneo_id=torneo_id, nombre=nombre, ciudad=ciudad, pais=pais, capacidad=capacidad)
     db.add(sede)

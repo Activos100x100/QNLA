@@ -1,0 +1,136 @@
+{% extends "qnla/layout.html" %}
+{% block title %}Estadísticas – QNLA{% endblock %}
+{% block page_title %}Estadísticas de Pronósticos{% endblock %}
+
+{% block styles %}
+<style>
+  .bar-container { height: 22px; display: flex; border-radius: 6px; overflow: hidden; }
+  .bar-local    { background: #1a7abf; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .bar-empate   { background: #6c757d; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .bar-visitante{ background: #e94560; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .partido-card { margin-bottom: 1.5rem; }
+  .partido-header { cursor: pointer; user-select: none; }
+  .partido-header:hover { background: #f0f0f0 !important; }
+  .badge-finalizado { font-size: .7rem; }
+  .resultado-real { font-weight: 700; color: #1a1a2e; }
+  .lista-participantes { max-height: 300px; overflow-y: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex align-items-center gap-3">
+  <label class="fw-semibold mb-0">Torneo:</label>
+  <select id="sel-torneo" class="form-select form-select-sm w-auto">
+    <option value="">Cargando…</option>
+  </select>
+  <span class="text-muted small" id="total-partidos-info"></span>
+</div>
+
+<div id="estadisticas-container">
+  <div class="text-muted text-center py-5">Selecciona un torneo para ver las estadísticas.</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
+
+async function cargarTorneos() {
+  const r = await fetch('/qnla/torneos/activos');
+  if (!r.ok) return;
+  const torneos = await r.json();
+  const sel = document.getElementById('sel-torneo');
+  sel.innerHTML = torneos.map(t => `<option value="${t.id}">${t.nombre} (${t.anio})</option>`).join('');
+  if (torneos.length > 0) cargarEstadisticas(torneos[0].id);
+  sel.addEventListener('change', () => cargarEstadisticas(sel.value));
+}
+
+async function cargarEstadisticas(torneoId) {
+  const container = document.getElementById('estadisticas-container');
+  container.innerHTML = '<div class="text-muted text-center py-5">Cargando…</div>';
+
+  const r = await fetch(`/qnla/pronosticos/estadisticas/${torneoId}`);
+  if (!r.ok) { container.innerHTML = '<div class="alert alert-danger">Error al cargar estadísticas.</div>'; return; }
+  const partidos = await r.json();
+
+  document.getElementById('total-partidos-info').textContent = `${partidos.length} partidos`;
+
+  if (partidos.length === 0) {
+    container.innerHTML = '<div class="text-muted text-center py-5">No hay partidos en este torneo.</div>';
+    return;
+  }
+
+  container.innerHTML = partidos.map((p, i) => {
+    const fecha = p.fecha_partido ? new Date(p.fecha_partido).toLocaleDateString('es', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '–';
+    const resultadoReal = p.finalizado
+      ? `<span class="badge bg-dark resultado-real ms-2">${p.goles_local_real} – ${p.goles_visitante_real}</span>`
+      : `<span class="badge bg-warning text-dark ms-2 badge-finalizado">Pendiente</span>`;
+
+    const barLocal     = p.pct_local > 0     ? `<div class="bar-local"     style="width:${p.pct_local}%"    >${p.pct_local}%</div>` : '';
+    const barEmpate    = p.pct_empate > 0    ? `<div class="bar-empate"    style="width:${p.pct_empate}%"   >${p.pct_empate}%</div>` : '';
+    const barVisitante = p.pct_visitante > 0 ? `<div class="bar-visitante" style="width:${p.pct_visitante}%">${p.pct_visitante}%</div>` : '';
+
+    const listaRows = p.participantes.length > 0
+      ? p.participantes.map(par => {
+          const signo = par.goles_local > par.goles_visitante ? '🟦' : par.goles_local === par.goles_visitante ? '⬜' : '🟥';
+          const pts = par.puntos_obtenidos !== null ? `<span class="badge bg-success">${par.puntos_obtenidos} pts</span>` : '';
+          return `<tr>
+            <td>${signo} ${par.nombre}</td>
+            <td class="text-center fw-semibold">${par.goles_local} – ${par.goles_visitante}</td>
+            <td class="text-center">${pts}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="3" class="text-muted text-center">Sin pronósticos</td></tr>';
+
+    return `
+    <div class="card border-0 shadow-sm partido-card">
+      <div class="card-header bg-white partido-header d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" data-bs-target="#partido-${p.partido_id}">
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold">${p.local}</span>
+          <span class="text-muted small">vs</span>
+          <span class="fw-bold">${p.visitante}</span>
+          ${resultadoReal}
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-muted small">${fecha}</span>
+          <span class="badge bg-secondary rounded-pill">${p.total_pronosticos} pronósticos</span>
+          <i class="bi bi-chevron-down"></i>
+        </div>
+      </div>
+      <div class="collapse show" id="partido-${p.partido_id}">
+        <div class="card-body">
+          <!-- Barra de distribución -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>🟦 ${p.local} (${p.apuestan_local})</span>
+              <span>⬜ Empate (${p.apuestan_empate})</span>
+              <span>🟥 ${p.visitante} (${p.apuestan_visitante})</span>
+            </div>
+            <div class="bar-container">
+              ${barLocal}${barEmpate}${barVisitante}
+              ${p.total_pronosticos === 0 ? '<div class="bg-light w-100 text-muted d-flex align-items-center justify-content-center" style="font-size:.75rem">Sin datos</div>' : ''}
+            </div>
+          </div>
+          <!-- Lista participantes -->
+          <div class="lista-participantes">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Participante</th>
+                  <th class="text-center">Pronóstico</th>
+                  <th class="text-center">Puntos</th>
+                </tr>
+              </thead>
+              <tbody>${listaRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+cargarTorneos();
+</script>
+{% endblock %}

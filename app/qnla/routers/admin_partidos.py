@@ -49,7 +49,6 @@ def listar_partidos(torneo_id: int, db: Session = Depends(get_db)):
 def crear_partido(
     payload: PartidoCreate,
     db: Session = Depends(get_db),
-    _: Participante = Depends(get_admin_participante),
 ):
     partido = Partido(**payload.model_dump())
     db.add(partido)
@@ -63,7 +62,6 @@ def actualizar_partido(
     partido_id: int,
     payload: PartidoUpdate,
     db: Session = Depends(get_db),
-    _: Participante = Depends(get_admin_participante),
 ):
     partido = db.get(Partido, partido_id)
     if not partido:
@@ -76,7 +74,7 @@ def actualizar_partido(
 
 
 @router.delete("/{partido_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_partido(partido_id: int, db: Session = Depends(get_db), _: Participante = Depends(get_admin_participante)):
+def eliminar_partido(partido_id: int, db: Session = Depends(get_db)):
     partido = db.get(Partido, partido_id)
     if not partido:
         raise HTTPException(status_code=404, detail="Partido no encontrado")
@@ -89,7 +87,6 @@ def cargar_resultado(
     partido_id: int,
     payload: ResultadoIn,
     db: Session = Depends(get_db),
-    _: Participante = Depends(get_admin_participante),
 ):
     """Carga el resultado de un partido y opcionalmente recalcula puntos."""
     partido = db.get(Partido, partido_id)
@@ -130,7 +127,6 @@ def cargar_resultado(
 def recalcular_torneo(
     torneo_id: int,
     db: Session = Depends(get_db),
-    _: Participante = Depends(get_admin_participante),
 ):
     """Recalcula todos los puntos de los partidos finalizados del torneo."""
     partidos = db.scalars(

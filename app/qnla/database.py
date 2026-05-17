@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from urllib.parse import urlparse, parse_qs
 
 # Reutiliza las mismas variables de entorno que el resto de la app
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -30,9 +31,17 @@ DATABASE_URL = _raw_url.replace("postgres://", "postgresql://", 1)
 # sslmode via connect_args (no en la URL para evitar conflictos)
 _sslmode = os.getenv("DB_SSLMODE", "require")
 _connect_args: dict = {}
-if not DATABASE_URL.startswith("postgresql:///") and not any(
-    DATABASE_URL.startswith(f"postgresql://{p}") for p in ["/", ""]
-):
+
+_parsed = urlparse(DATABASE_URL)
+_query = parse_qs(_parsed.query)
+_query_host = (_query.get("host") or [""])[0]
+_looks_like_cloudsql_socket = (
+    "/cloudsql/" in DATABASE_URL
+    or str(_parsed.hostname or "").startswith("/cloudsql/")
+    or str(_query_host or "").startswith("/cloudsql/")
+)
+
+if not _looks_like_cloudsql_socket:
     _connect_args = {"sslmode": _sslmode}
 
 engine = create_engine(

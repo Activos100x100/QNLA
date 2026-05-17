@@ -33,7 +33,7 @@ def list_usuario_admin(q: str = None):
         cols = _get_usuario_admin_columns(cur)
         select_cols = [
             c for c in [
-                "id", "nombre", "apellidos", "dni", "email_corporativo", "email_personal",
+                "id", "nombre", "apellidos", "dni", "email_personal", # Usar email_personal como email principal (Google)
                 "telefono_corporativo", "telefono_personal", "direccion", "activo",
                 "created_at", "departamento_id", "fecha_baja"
             ]

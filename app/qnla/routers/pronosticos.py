@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.qnla.database import get_db
 from app.qnla.models.partido import Partido
@@ -99,3 +99,53 @@ def mi_pronostico_partido(
     if not prono:
         raise HTTPException(status_code=404, detail="Pronóstico no encontrado")
     return prono
+
+
+@router.get("/estadisticas/{torneo_id}")
+def estadisticas_pronosticos(torneo_id: int, db: Session = Depends(get_db)):
+    """Estadísticas públicas de pronósticos por partido de un torneo."""
+    partidos = db.scalars(
+        select(Partido).where(Partido.torneo_id == torneo_id).order_by(Partido.fecha_partido)
+    ).all()
+
+    resultado = []
+    for partido in partidos:
+        pronos = db.scalars(
+            select(Pronostico).where(Pronostico.partido_id == partido.id)
+        ).all()
+
+        total = len(pronos)
+        apuestan_local = sum(1 for p in pronos if p.goles_local > p.goles_visitante)
+        apuestan_empate = sum(1 for p in pronos if p.goles_local == p.goles_visitante)
+        apuestan_visitante = sum(1 for p in pronos if p.goles_local < p.goles_visitante)
+
+        def pct(n): return round(n * 100 / total, 1) if total > 0 else 0
+
+        participantes_data = []
+        for prono in sorted(pronos, key=lambda p: p.participante.nombre if p.participante else ""):
+            participantes_data.append({
+                "nombre": prono.participante.nombre if prono.participante else "–",
+                "goles_local": prono.goles_local,
+                "goles_visitante": prono.goles_visitante,
+                "puntos_obtenidos": prono.puntos_obtenidos,
+            })
+
+        resultado.append({
+            "partido_id": partido.id,
+            "local": partido.seleccion_local.nombre if partido.seleccion_local else "?",
+            "visitante": partido.seleccion_visitante.nombre if partido.seleccion_visitante else "?",
+            "fecha_partido": partido.fecha_partido.isoformat() if partido.fecha_partido else None,
+            "finalizado": partido.finalizado,
+            "goles_local_real": partido.goles_local,
+            "goles_visitante_real": partido.goles_visitante,
+            "total_pronosticos": total,
+            "apuestan_local": apuestan_local,
+            "apuestan_empate": apuestan_empate,
+            "apuestan_visitante": apuestan_visitante,
+            "pct_local": pct(apuestan_local),
+            "pct_empate": pct(apuestan_empate),
+            "pct_visitante": pct(apuestan_visitante),
+            "participantes": participantes_data,
+        })
+
+    return resultado

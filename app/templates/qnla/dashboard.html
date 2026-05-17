@@ -82,7 +82,7 @@
   </div>
   <div class="col-lg-5">
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white fw-semibold">Top 5 Ranking</div>
+      <div class="card-header bg-white fw-semibold">Top 20 Ranking</div>
       <div class="card-body p-0">
         <table class="table table-sm mb-0">
           <thead class="table-light">
@@ -132,7 +132,7 @@
     const rRank = await fetch(`/qnla/ranking/${tId}`);
     if (rRank && rRank.ok) {
       const ranking = await rRank.json();
-      rankingBody.innerHTML = ranking.slice(0, 5).map(r =>
+      rankingBody.innerHTML = ranking.slice(0, 20).map(r =>
         `<tr${me && r.participante_id == me.id ? ' class="table-warning"' : ''}>
           <td>${r.posicion}</td><td>${r.nombre}</td><td class="text-end fw-bold">${r.puntos_totales}</td>
         </tr>`
