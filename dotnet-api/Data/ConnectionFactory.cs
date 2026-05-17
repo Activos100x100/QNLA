@@ -59,8 +59,10 @@ public sealed class ConnectionFactory(IConfiguration configuration) : IConnectio
 
     private static string ConvertDatabaseUrl(string databaseUrl, IConfiguration configuration)
     {
-        var normalized = databaseUrl.Replace("postgres://", "postgresql://", StringComparison.OrdinalIgnoreCase);
-        var uri = new Uri(normalized);
+        var postgresqlUrl = databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
+            ? "postgresql://" + databaseUrl["postgres://".Length..]
+            : databaseUrl;
+        var uri = new Uri(postgresqlUrl);
 
         var query = QueryHelpers.ParseQuery(uri.Query);
         var hostFromQuery = query.TryGetValue("host", out var hostValue) ? hostValue.ToString() : null;
@@ -69,15 +71,16 @@ public sealed class ConnectionFactory(IConfiguration configuration) : IConnectio
         var host = !string.IsNullOrWhiteSpace(hostFromQuery)
             ? Uri.UnescapeDataString(hostFromQuery)
             : uri.Host;
+        var credentials = uri.UserInfo.Split(':', 2);
 
         var builder = new NpgsqlConnectionStringBuilder
         {
             Host = host,
             Port = uri.IsDefaultPort ? 5432 : uri.Port,
             Database = uri.AbsolutePath.Trim('/'),
-            Username = Uri.UnescapeDataString(uri.UserInfo.Split(':', 2)[0]),
-            Password = uri.UserInfo.Contains(':')
-                ? Uri.UnescapeDataString(uri.UserInfo.Split(':', 2)[1])
+            Username = Uri.UnescapeDataString(credentials[0]),
+            Password = credentials.Length > 1
+                ? Uri.UnescapeDataString(credentials[1])
                 : string.Empty,
             Pooling = true
         };

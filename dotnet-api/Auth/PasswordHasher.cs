@@ -31,10 +31,9 @@ public sealed class PasswordHasher(
                 return true;
             }
 
-            logger.LogWarning("Base64 password validation failed; trying HEX fallback.");
             if (TryVerifyWithEncoding(plainPassword, storedHash, storedSalt, "Hex", out verified) && verified)
             {
-                logger.LogWarning("Password hash validation succeeded using HEX fallback.");
+                logger.LogWarning("Password hash verified using Hex fallback encoding at {UtcNow}.", DateTime.UtcNow);
                 return true;
             }
 

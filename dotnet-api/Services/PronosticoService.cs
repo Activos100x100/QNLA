@@ -32,7 +32,7 @@ public sealed class PronosticoService(IConnectionFactory connectionFactory) : IP
                 return ((int)422, (object)new { detail = "Partido no existe para el torneo indicado." });
             }
 
-            if (DateTime.UtcNow >= partido.Cierre_Pronostico.ToUniversalTime() || partido.Finalizado)
+            if (IsPronosticoClosed(partido.Cierre_Pronostico, partido.Finalizado))
             {
                 return ((int)409, (object)new { detail = "Pronósticos cerrados para este partido" });
             }
@@ -109,7 +109,7 @@ public sealed class PronosticoService(IConnectionFactory connectionFactory) : IP
                 return ((int)403, (object)new { detail = "No autorizado para editar este pronóstico." });
             }
 
-            if (DateTime.UtcNow >= row.Cierre_Pronostico.ToUniversalTime() || row.Finalizado)
+            if (IsPronosticoClosed(row.Cierre_Pronostico, row.Finalizado))
             {
                 return ((int)409, (object)new { detail = "Pronósticos cerrados para este partido" });
             }
@@ -174,7 +174,7 @@ public sealed class PronosticoService(IConnectionFactory connectionFactory) : IP
                 return ((int)403, (object)new { detail = "No autorizado para eliminar este pronóstico." });
             }
 
-            if (DateTime.UtcNow >= row.Cierre_Pronostico.ToUniversalTime() || row.Finalizado)
+            if (IsPronosticoClosed(row.Cierre_Pronostico, row.Finalizado))
             {
                 return ((int)409, (object)new { detail = "Pronósticos cerrados para este partido" });
             }
@@ -183,4 +183,7 @@ public sealed class PronosticoService(IConnectionFactory connectionFactory) : IP
             return ((int)200, (object)new { id = pronosticoId, deleted = true });
         });
     }
+
+    private static bool IsPronosticoClosed(DateTime cierrePronostico, bool finalizado)
+        => finalizado || DateTime.UtcNow >= cierrePronostico.ToUniversalTime();
 }
