@@ -1,0 +1,133 @@
+@page "/perfil"
+@attribute [Authorize]
+@inject ApiService ApiService
+
+<PageTitle>Perfil - QLNA</PageTitle>
+
+<h1>Perfil</h1>
+
+<div class="panel">
+    <label for="torneo">Torneo</label>
+    <select id="torneo" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
+        @foreach (var torneo in _torneos)
+        {
+            <option value="@torneo.id">@torneo.nombre</option>
+        }
+    </select>
+</div>
+
+@if (_perfil is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="card profile-card">
+        <div class="field">
+            <label>Nombre</label>
+            <InputText class="input" @bind-Value="_editable.nombre" disabled="@(!_editMode)" />
+        </div>
+        <div class="field">
+            <label>Email</label>
+            <InputText class="input" @bind-Value="_editable.email" disabled="@(!_editMode)" />
+        </div>
+        <div class="field">
+            <label>Teléfono</label>
+            <InputText class="input" @bind-Value="_editable.telefono" disabled="@(!_editMode)" />
+        </div>
+
+        <div class="stats">
+            <span>Puntos: <strong>@_perfil.puntos</strong></span>
+            <span>Posición: <strong>@_perfil.posicion</strong></span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_message))
+        {
+            <p class="message @(_messageOk ? "success" : "error")">@_message</p>
+        }
+
+        <div class="actions">
+            @if (!_editMode)
+            {
+                <button class="btn btn-secondary" @onclick="ActivarEdicion">Editar</button>
+            }
+            else
+            {
+                <button class="btn btn-primary" @onclick="Guardar">Guardar</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private List<Torneo> _torneos = new();
+    private int _torneoSeleccionadoId = 1;
+    private PerfilDto? _perfil;
+    private ActualizarPerfilRequest _editable = new();
+    private bool _editMode;
+    private string? _message;
+    private bool _messageOk;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _torneos = (await ApiService.GetTorneosAsync()).ToList();
+        var activo = _torneos.FirstOrDefault(x => x.activo);
+        _torneoSeleccionadoId = (activo ?? _torneos.FirstOrDefault())?.id ?? 1;
+        await CargarPerfil();
+    }
+
+    private async Task OnTorneoChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var id))
+        {
+            _torneoSeleccionadoId = id;
+            _message = null;
+            _editMode = false;
+            await CargarPerfil();
+        }
+    }
+
+    private void ActivarEdicion()
+    {
+        _editMode = true;
+        _message = null;
+    }
+
+    private async Task Guardar()
+    {
+        var updated = await ApiService.ActualizarPerfilAsync(_torneoSeleccionadoId, _editable);
+        if (updated is null)
+        {
+            _messageOk = false;
+            _message = "No se pudo actualizar el perfil.";
+            return;
+        }
+
+        _perfil = updated;
+        _editable = new ActualizarPerfilRequest
+        {
+            nombre = _perfil.nombre,
+            email = _perfil.email,
+            telefono = _perfil.telefono
+        };
+        _editMode = false;
+        _messageOk = true;
+        _message = "Perfil actualizado correctamente.";
+    }
+
+    private async Task CargarPerfil()
+    {
+        _perfil = await ApiService.GetPerfilAsync(_torneoSeleccionadoId);
+        if (_perfil is null)
+        {
+            return;
+        }
+
+        _editable = new ActualizarPerfilRequest
+        {
+            nombre = _perfil.nombre,
+            email = _perfil.email,
+            telefono = _perfil.telefono
+        };
+    }
+}

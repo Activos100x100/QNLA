@@ -1,0 +1,72 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@inject ApiService ApiService
+@inject AuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Login - QLNA</PageTitle>
+
+<section class="auth-wrapper">
+    <div class="auth-card">
+        <div class="logo">⚽</div>
+        <h1>QLNA</h1>
+
+        <EditForm Model="_request" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <div class="field">
+                <label>DNI/NIE</label>
+                <InputText @bind-Value="_request.dni_nie" class="input" />
+            </div>
+            <div class="field">
+                <label>Contraseña</label>
+                <InputText @bind-Value="_request.password" type="password" class="input" />
+            </div>
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <p class="message error">@_error</p>
+            }
+            <button class="btn btn-primary" type="submit" disabled="@_loading">@(_loading ? "Entrando..." : "Entrar")</button>
+        </EditForm>
+
+        <footer>Aplicación interna de Activos 100x100</footer>
+    </div>
+</section>
+
+@code {
+    private readonly LoginRequest _request = new();
+    private string? _error;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/pronosticos");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(_request.dni_nie) || string.IsNullOrWhiteSpace(_request.password))
+        {
+            _error = "DNI/NIE y contraseña son obligatorios.";
+            return;
+        }
+
+        _loading = true;
+        _error = null;
+
+        var ok = await ApiService.LoginAsync(_request.dni_nie.Trim(), _request.password);
+        if (!ok)
+        {
+            _error = "Credenciales incorrectas";
+            _loading = false;
+            return;
+        }
+
+        await AuthStateProvider.NotifyLoginAsync();
+        Navigation.NavigateTo("/pronosticos", forceLoad: true);
+        _loading = false;
+    }
+}

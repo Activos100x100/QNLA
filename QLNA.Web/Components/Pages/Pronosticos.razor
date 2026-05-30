@@ -1,0 +1,152 @@
+@page "/"
+@page "/pronosticos"
+@attribute [Authorize]
+@inject ApiService ApiService
+
+<PageTitle>Pronósticos - QLNA</PageTitle>
+
+<h1>Pronósticos</h1>
+
+@if (_loading)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="panel">
+        <label for="torneo">Torneo</label>
+        <select id="torneo" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
+            @foreach (var torneo in _torneos)
+            {
+                <option value="@torneo.id">@torneo.nombre</option>
+            }
+        </select>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+        <div class="message @(_statusOk ? "success" : "error")">@_statusMessage</div>
+    }
+
+    @if (_partidos.Count == 0)
+    {
+        <p class="muted">No hay partidos disponibles.</p>
+    }
+
+    @foreach (var partido in _partidos)
+    {
+        <article class="card match-card">
+            <div class="match-header">
+                <strong>@(partido.equipo_local ?? "Local") vs @(partido.equipo_visitante ?? "Visitante")</strong>
+                <span>@partido.fecha.ToString("dd/MM HH:mm")</span>
+            </div>
+            @if (partido.pronostico is { } pronostico)
+            {
+                <div class="match-inputs">
+                    <InputNumber @bind-Value="pronostico.goles_local" class="goal-input" disabled="@PartidoBloqueado(partido)" />
+                    <span>:</span>
+                    <InputNumber @bind-Value="pronostico.goles_visitante" class="goal-input" disabled="@PartidoBloqueado(partido)" />
+                </div>
+            }
+            @if (partido.goles_local_real.HasValue && partido.goles_visitante_real.HasValue)
+            {
+                <small class="muted">Resultado oficial: @partido.goles_local_real - @partido.goles_visitante_real</small>
+            }
+        </article>
+    }
+
+    <button class="btn btn-primary" @onclick="GuardarPronosticos" disabled="@_saving">@(_saving ? "Guardando..." : "Guardar pronósticos")</button>
+}
+
+@code {
+    private List<Torneo> _torneos = new();
+    private List<Partido> _partidos = new();
+    private int _torneoSeleccionadoId;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _statusMessage;
+    private bool _statusOk;
+    private readonly Dictionary<int, (int? local, int? visitante)> _snapshot = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _torneos = (await ApiService.GetTorneosAsync()).ToList();
+        var activo = _torneos.FirstOrDefault(x => x.activo);
+        _torneoSeleccionadoId = (activo ?? _torneos.FirstOrDefault())?.id ?? 0;
+        await CargarPartidos();
+        _loading = false;
+    }
+
+    private async Task OnTorneoChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var id))
+        {
+            _torneoSeleccionadoId = id;
+            await CargarPartidos();
+        }
+    }
+
+    private async Task CargarPartidos()
+    {
+        _statusMessage = null;
+        _partidos = (await ApiService.GetPartidosAsync(_torneoSeleccionadoId)).OrderBy(x => x.fecha).ToList();
+        var pronosticos = await ApiService.GetPronosticosByTorneoAsync(_torneoSeleccionadoId);
+
+        foreach (var partido in _partidos)
+        {
+            if (pronosticos.TryGetValue(partido.id, out var pron))
+            {
+                partido.pronostico = pron;
+            }
+            else
+            {
+                partido.pronostico = new Pronostico { partido_id = partido.id };
+            }
+
+            _snapshot[partido.id] = (partido.pronostico.goles_local, partido.pronostico.goles_visitante);
+        }
+    }
+
+    private bool PartidoBloqueado(Partido partido)
+        => partido.goles_local_real.HasValue && partido.goles_visitante_real.HasValue;
+
+    private async Task GuardarPronosticos()
+    {
+        _saving = true;
+        _statusMessage = null;
+
+        var changed = _partidos.Where(p =>
+            !PartidoBloqueado(p)
+            && p.pronostico?.goles_local is not null
+            && p.pronostico?.goles_visitante is not null
+            && _snapshot.TryGetValue(p.id, out var original)
+            && (original.local != p.pronostico.goles_local || original.visitante != p.pronostico.goles_visitante))
+            .ToList();
+
+        if (changed.Count == 0)
+        {
+            _statusOk = true;
+            _statusMessage = "No hay cambios para guardar.";
+            _saving = false;
+            return;
+        }
+
+        var errors = 0;
+        foreach (var partido in changed)
+        {
+            var ok = await ApiService.GuardarPronosticoAsync(partido);
+            if (!ok)
+            {
+                errors++;
+            }
+            else
+            {
+                _snapshot[partido.id] = (partido.pronostico?.goles_local, partido.pronostico?.goles_visitante);
+            }
+        }
+
+        _statusOk = errors == 0;
+        _statusMessage = errors == 0 ? "Pronósticos guardados correctamente." : "No se pudieron guardar algunos pronósticos.";
+        _saving = false;
+    }
+}

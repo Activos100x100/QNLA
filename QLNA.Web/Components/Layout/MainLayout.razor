@@ -1,0 +1,37 @@
+@inherits LayoutComponentBase
+@inject AuthStateProvider AuthStateProvider
+@inject SessionTokenStore TokenStore
+@inject NavigationManager Navigation
+
+<div class="app-layout">
+    <header class="app-header">
+        <div class="brand">⚽ QLNA</div>
+        <div class="user-area">
+            <span class="user-name">@((TokenStore.UsuarioActual?.nombre ?? "Invitado"))</span>
+            <button class="btn btn-secondary" @onclick="Logout">Salir</button>
+        </div>
+    </header>
+
+    <div class="app-shell">
+        <aside class="app-nav">
+            <NavMenu />
+        </aside>
+        <main class="app-main">
+            @Body
+        </main>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Se ha producido un error inesperado.
+    <a href="." class="reload">Recargar</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthStateProvider.SignOutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}
