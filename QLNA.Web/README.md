@@ -12,7 +12,7 @@ Versión web de QLNA Mobile en Blazor Server.
 cd QLNA.Web && dotnet run
 ```
 
-Abrir `https://localhost:5001`.
+Abrir `https://localhost:7116`.
 
 ## Variables de entorno
 

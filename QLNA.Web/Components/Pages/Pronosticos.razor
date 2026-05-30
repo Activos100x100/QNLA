@@ -40,11 +40,14 @@ else
                 <strong>@(partido.equipo_local ?? "Local") vs @(partido.equipo_visitante ?? "Visitante")</strong>
                 <span>@partido.fecha.ToString("dd/MM HH:mm")</span>
             </div>
-            <div class="match-inputs">
-                <InputNumber @bind-Value="partido.pronostico!.goles_local" class="goal-input" disabled="@PartidoBloqueado(partido)" />
-                <span>:</span>
-                <InputNumber @bind-Value="partido.pronostico!.goles_visitante" class="goal-input" disabled="@PartidoBloqueado(partido)" />
-            </div>
+            @if (partido.pronostico is { } pronostico)
+            {
+                <div class="match-inputs">
+                    <InputNumber @bind-Value="pronostico.goles_local" class="goal-input" disabled="@PartidoBloqueado(partido)" />
+                    <span>:</span>
+                    <InputNumber @bind-Value="pronostico.goles_visitante" class="goal-input" disabled="@PartidoBloqueado(partido)" />
+                </div>
+            }
             @if (partido.goles_local_real.HasValue && partido.goles_visitante_real.HasValue)
             {
                 <small class="muted">Resultado oficial: @partido.goles_local_real - @partido.goles_visitante_real</small>

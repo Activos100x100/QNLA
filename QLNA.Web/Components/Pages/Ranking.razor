@@ -35,10 +35,11 @@
     <tbody>
         @foreach (var item in _ranking.entradas)
         {
-            <tr class="@(item.usuario_id == TokenStore.UsuarioActual?.usuario_id ? "mine" : string.Empty)">
-                <td>@item.posicion</td>
+            var itemUserId = item.usuario_id ?? item.empleado_id;
+            <tr class="@(itemUserId == TokenStore.UsuarioActual?.usuario_id ? "mine" : string.Empty)">
+                <td>@(item.posicion ?? 0)</td>
                 <td>@item.nombre</td>
-                <td>@item.puntos</td>
+                <td>@(item.puntos ?? item.puntos_totales ?? 0)</td>
             </tr>
         }
     </tbody>

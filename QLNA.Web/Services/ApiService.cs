@@ -102,7 +102,6 @@ public class ApiService
             var partidos = await res.Content.ReadFromJsonAsync<IEnumerable<Partido>>(_jsonOptions) ?? Enumerable.Empty<Partido>();
             foreach (var p in partidos)
             {
-                p.fecha = p.fecha == default ? DateTime.Now : p.fecha;
                 p.pronostico ??= new Pronostico { partido_id = p.id };
             }
 
@@ -227,18 +226,16 @@ public class ApiService
                 ranking.entradas = ranking.top.Select(x => new RankingEntryDto
                 {
                     posicion = x.posicion,
-                    usuario_id = x.usuario_id == 0 ? x.empleado_id : x.usuario_id,
+                    usuario_id = x.usuario_id ?? x.empleado_id,
                     nombre = x.nombre ?? x.nombre_completo ?? x.alias,
-                    puntos = x.puntos == 0 ? x.puntos_totales : x.puntos
+                    puntos = x.puntos ?? x.puntos_totales
                 }).ToList();
             }
 
-            if (ranking.mi_posicion is null && ranking.mi_posicion_detalle is not null)
+            if (ranking.mi_posicion is null && ranking.mi_posicion_detalle is { } detalle)
             {
-                ranking.mi_posicion = ranking.mi_posicion_detalle.posicion;
-                ranking.mis_puntos = ranking.mi_posicion_detalle.puntos == 0
-                    ? ranking.mi_posicion_detalle.puntos_totales
-                    : ranking.mi_posicion_detalle.puntos;
+                ranking.mi_posicion = detalle.posicion;
+                ranking.mis_puntos = detalle.puntos ?? detalle.puntos_totales;
             }
 
             return ranking;

@@ -11,12 +11,12 @@ public class RankingResponseDto
 
 public class RankingEntryDto
 {
-    public int posicion { get; set; }
-    public int usuario_id { get; set; }
+    public int? posicion { get; set; }
+    public int? usuario_id { get; set; }
     public string? nombre { get; set; }
-    public int puntos { get; set; }
-    public int empleado_id { get; set; }
+    public int? puntos { get; set; }
+    public int? empleado_id { get; set; }
     public string? nombre_completo { get; set; }
     public string? alias { get; set; }
-    public int puntos_totales { get; set; }
+    public int? puntos_totales { get; set; }
 }
