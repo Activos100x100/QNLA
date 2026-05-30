@@ -9,7 +9,7 @@
             <header class="app-header">
                 <div class="brand">QLNA</div>
                 <div class="user-area">
-                    <span class="user-name">@((TokenStore.UsuarioActual?.nombre ?? "Usuario"))</span>
+                    <span class="user-name">@((TokenStore.UsuarioActual?.nombre ?? "Invitado"))</span>
                     <button class="btn btn-secondary" @onclick="Logout">Salir</button>
                 </div>
             </header>
