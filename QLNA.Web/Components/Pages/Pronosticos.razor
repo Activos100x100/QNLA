@@ -1,4 +1,3 @@
-@page "/"
 @page "/pronosticos"
 @attribute [Authorize]
 @inject ApiService ApiService
@@ -55,7 +54,7 @@ else
         </article>
     }
 
-    <button class="btn btn-primary" @onclick="GuardarPronosticos" disabled="@_saving">@(_saving ? "Guardando..." : "Guardar pronósticos")</button>
+    <button class="btn btn-cta" @onclick="GuardarPronosticos" disabled="@_saving">@(_saving ? "Guardando..." : "Guardar pronósticos")</button>
 }
 
 @code {

@@ -1,3 +1,4 @@
+@layout AuthLayout
 @page "/login"
 @attribute [AllowAnonymous]
 @inject ApiService ApiService
@@ -6,31 +7,31 @@
 
 <PageTitle>Login - QLNA</PageTitle>
 
-<section class="auth-wrapper">
-    <div class="auth-card">
-        <div class="logo">⚽</div>
-        <h1>QLNA</h1>
+<div class="login-head">
+    <h1>QLNA</h1>
+    <p>Quiniela 100x100</p>
+</div>
 
-        <EditForm Model="_request" OnValidSubmit="HandleLogin">
-            <DataAnnotationsValidator />
-            <div class="field">
-                <label>DNI/NIE</label>
-                <InputText @bind-Value="_request.dni_nie" class="input" />
-            </div>
-            <div class="field">
-                <label>Contraseña</label>
-                <InputText @bind-Value="_request.password" type="password" class="input" />
-            </div>
-            @if (!string.IsNullOrWhiteSpace(_error))
-            {
-                <p class="message error">@_error</p>
-            }
-            <button class="btn btn-primary" type="submit" disabled="@_loading">@(_loading ? "Entrando..." : "Entrar")</button>
-        </EditForm>
+<EditForm Model="_request" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
 
-        <footer>Aplicación interna de Activos 100x100</footer>
+    <div class="field">
+        <label for="dni">DNI/NIE</label>
+        <InputText id="dni" @bind-Value="_request.dni_nie" class="input" />
     </div>
-</section>
+
+    <div class="field">
+        <label for="password">Contraseña</label>
+        <InputText id="password" @bind-Value="_request.password" type="password" class="input" />
+    </div>
+
+    <button class="btn btn-cta btn-block" type="submit" disabled="@_loading">@(_loading ? "Entrando..." : "Entrar")</button>
+
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <p class="message error login-error">@_error</p>
+    }
+</EditForm>
 
 @code {
     private readonly LoginRequest _request = new();
@@ -42,7 +43,7 @@
         var state = await AuthStateProvider.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
         {
-            Navigation.NavigateTo("/pronosticos");
+            Navigation.NavigateTo("/pronosticos", forceLoad: true);
         }
     }
 

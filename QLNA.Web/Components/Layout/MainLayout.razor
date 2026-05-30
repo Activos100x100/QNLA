@@ -4,22 +4,31 @@
 @inject NavigationManager Navigation
 
 <div class="app-layout">
-    <header class="app-header">
-        <div class="brand">⚽ QLNA</div>
-        <div class="user-area">
-            <span class="user-name">@((TokenStore.UsuarioActual?.nombre ?? "Invitado"))</span>
-            <button class="btn btn-secondary" @onclick="Logout">Salir</button>
-        </div>
-    </header>
+    <AuthorizeView>
+        <Authorized>
+            <header class="app-header">
+                <div class="brand">QLNA</div>
+                <div class="user-area">
+                    <span class="user-name">@((TokenStore.UsuarioActual?.nombre ?? "Usuario"))</span>
+                    <button class="btn btn-secondary" @onclick="Logout">Salir</button>
+                </div>
+            </header>
 
-    <div class="app-shell">
-        <aside class="app-nav">
-            <NavMenu />
-        </aside>
-        <main class="app-main">
+            <div class="app-shell">
+                <aside class="app-nav">
+                    <NavMenu />
+                </aside>
+                <main class="app-main">
+                    <div class="app-content">
+                        @Body
+                    </div>
+                </main>
+            </div>
+        </Authorized>
+        <NotAuthorized>
             @Body
-        </main>
-    </div>
+        </NotAuthorized>
+    </AuthorizeView>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
