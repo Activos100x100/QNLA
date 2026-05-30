@@ -1,0 +1,37 @@
+.menu {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .5rem;
+    padding: .75rem;
+}
+
+.menu-link {
+    text-decoration: none;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: .7rem;
+    padding: .55rem .6rem;
+    text-align: center;
+    font-size: .85rem;
+}
+
+.menu-link.active {
+    color: #fff;
+    border-color: var(--accent);
+    background: rgba(138, 180, 248, .22);
+}
+
+@media (min-width: 768px) {
+    .menu {
+        grid-template-columns: 1fr;
+        align-content: start;
+        padding: 1rem;
+    }
+
+    .menu-link {
+        text-align: left;
+        padding: .7rem .8rem;
+        font-size: .95rem;
+    }
+}

@@ -1,0 +1,73 @@
+@page "/ranking"
+@attribute [Authorize]
+@inject ApiService ApiService
+@inject SessionTokenStore TokenStore
+
+<PageTitle>Ranking - QLNA</PageTitle>
+
+<h1>Ranking</h1>
+
+<div class="panel">
+    <label for="torneo">Torneo</label>
+    <select id="torneo" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
+        @foreach (var torneo in _torneos)
+        {
+            <option value="@torneo.id">@torneo.nombre</option>
+        }
+    </select>
+</div>
+
+@if (_ranking.mi_posicion.HasValue || _ranking.mis_puntos.HasValue)
+{
+    <div class="card summary-card">
+        Estás en la posición <strong>@(_ranking.mi_posicion ?? 0)</strong> con <strong>@(_ranking.mis_puntos ?? 0)</strong> puntos.
+    </div>
+}
+
+<table class="ranking-table">
+    <thead>
+        <tr>
+            <th>Posición</th>
+            <th>Nombre</th>
+            <th>Puntos</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in _ranking.entradas)
+        {
+            <tr class="@(item.usuario_id == TokenStore.UsuarioActual?.usuario_id ? "mine" : string.Empty)">
+                <td>@item.posicion</td>
+                <td>@item.nombre</td>
+                <td>@item.puntos</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Torneo> _torneos = new();
+    private int _torneoSeleccionadoId;
+    private RankingResponseDto _ranking = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _torneos = (await ApiService.GetTorneosAsync()).ToList();
+        var activo = _torneos.FirstOrDefault(x => x.activo);
+        _torneoSeleccionadoId = (activo ?? _torneos.FirstOrDefault())?.id ?? 0;
+        await CargarRanking();
+    }
+
+    private async Task OnTorneoChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var id))
+        {
+            _torneoSeleccionadoId = id;
+            await CargarRanking();
+        }
+    }
+
+    private async Task CargarRanking()
+    {
+        _ranking = await ApiService.GetRankingAsync(_torneoSeleccionadoId);
+    }
+}
