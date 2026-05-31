@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using QLNA.Web.Models;
 
 namespace QLNA.Web.Services;
@@ -10,6 +11,7 @@ public class ApiService
 {
     private readonly HttpClient _client;
     private readonly SessionTokenStore _sessionTokenStore;
+    private readonly ILogger<ApiService> _logger;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -17,10 +19,11 @@ public class ApiService
 
     public LoginResponse? UsuarioActual { get; private set; }
 
-    public ApiService(HttpClient client, SessionTokenStore sessionTokenStore)
+    public ApiService(HttpClient client, SessionTokenStore sessionTokenStore, ILogger<ApiService> logger)
     {
         _client = client;
         _sessionTokenStore = sessionTokenStore;
+        _logger = logger;
     }
 
     public async Task<string> GetHealthAsync()
@@ -98,6 +101,8 @@ public class ApiService
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
+                var body = await res.Content.ReadAsStringAsync();
+                _logger.LogError("GetPartidosAsync failed for torneo {TorneoId}. Status {StatusCode}. Body: {Body}", torneoId, (int)res.StatusCode, body);
                 return Enumerable.Empty<Partido>();
             }
 
@@ -109,8 +114,9 @@ public class ApiService
 
             return partidos;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GetPartidosAsync threw for torneo {TorneoId}", torneoId);
             return Enumerable.Empty<Partido>();
         }
     }
@@ -198,13 +204,16 @@ public class ApiService
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
+                var body = await res.Content.ReadAsStringAsync();
+                _logger.LogError("GetGruposAsync failed for torneo {TorneoId}. Status {StatusCode}. Body: {Body}", torneoId, (int)res.StatusCode, body);
                 return Enumerable.Empty<Grupo>();
             }
 
             return await res.Content.ReadFromJsonAsync<IEnumerable<Grupo>>(_jsonOptions) ?? Enumerable.Empty<Grupo>();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "GetGruposAsync threw for torneo {TorneoId}", torneoId);
             return Enumerable.Empty<Grupo>();
         }
     }
