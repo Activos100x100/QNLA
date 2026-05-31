@@ -56,7 +56,10 @@
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        _ = int.TryParse(state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out _currentUserId);
+        if (!int.TryParse(state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out _currentUserId))
+        {
+            _currentUserId = 0;
+        }
 
         _torneos = (await ApiService.GetTorneosAsync()).ToList();
         var activo = _torneos.FirstOrDefault(x => x.activo);

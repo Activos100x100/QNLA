@@ -3,6 +3,7 @@
 @attribute [AllowAnonymous]
 @inject ApiService ApiService
 @inject NavigationManager Navigation
+@using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
@@ -88,7 +89,7 @@
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.usuario_id?.ToString() ?? user.usuario?.usuario_id?.ToString() ?? user.usuario?.empleado_id?.ToString() ?? "0"),
+            new(ClaimTypes.NameIdentifier, ResolveUserId(user)),
             new(ClaimTypes.Name, user.nombre ?? user.usuario?.nombre ?? input.DniNie),
             new("access_token", user.access_token ?? string.Empty)
         };
@@ -102,9 +103,17 @@
         Navigation.NavigateTo("/pronosticos", forceLoad: true);
     }
 
+    private static string ResolveUserId(LoginResponse user)
+        => user.usuario_id?.ToString()
+            ?? user.usuario?.usuario_id?.ToString()
+            ?? user.usuario?.empleado_id?.ToString()
+            ?? "0";
+
     public class LoginRequest
     {
+        [Required]
         public string DniNie { get; set; } = string.Empty;
+        [Required]
         public string Password { get; set; } = string.Empty;
     }
 }
