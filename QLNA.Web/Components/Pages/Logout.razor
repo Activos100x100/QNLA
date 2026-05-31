@@ -1,0 +1,21 @@
+@page "/logout"
+@layout AuthLayout
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+<form method="post" @formname="logout" @onsubmit="HandleLogout" data-enhance="false">
+    <AntiforgeryToken />
+    <button type="submit" class="btn-primary">Salir</button>
+</form>
+
+@code {
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
+
+    private async Task HandleLogout()
+    {
+        await HttpContext!.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

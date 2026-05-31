@@ -1,7 +1,9 @@
 @page "/ranking"
+@rendermode InteractiveServer
 @attribute [Authorize]
 @inject ApiService ApiService
-@inject SessionTokenStore TokenStore
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Security.Claims
 
 <PageTitle>Ranking - QLNA</PageTitle>
 
@@ -36,7 +38,7 @@
         @foreach (var item in _ranking.entradas)
         {
             var itemUserId = item.usuario_id ?? item.empleado_id;
-            <tr class="@(itemUserId == TokenStore.UsuarioActual?.usuario_id ? "mine" : string.Empty)">
+            <tr class="@(itemUserId == _currentUserId ? "mine" : string.Empty)">
                 <td>@(item.posicion ?? 0)</td>
                 <td>@item.nombre</td>
                 <td>@(item.puntos ?? item.puntos_totales ?? 0)</td>
@@ -48,10 +50,17 @@
 @code {
     private List<Torneo> _torneos = new();
     private int _torneoSeleccionadoId;
+    private int _currentUserId;
     private RankingResponseDto _ranking = new();
 
     protected override async Task OnInitializedAsync()
     {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!int.TryParse(state.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out _currentUserId))
+        {
+            _currentUserId = 0;
+        }
+
         _torneos = (await ApiService.GetTorneosAsync()).ToList();
         var activo = _torneos.FirstOrDefault(x => x.activo);
         _torneoSeleccionadoId = (activo ?? _torneos.FirstOrDefault())?.id ?? 0;

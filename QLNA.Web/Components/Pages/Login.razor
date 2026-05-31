@@ -1,47 +1,63 @@
-@layout AuthLayout
 @page "/login"
+@layout AuthLayout
 @attribute [AllowAnonymous]
 @inject ApiService ApiService
-@inject AuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
 
 <PageTitle>Login - QLNA</PageTitle>
 
-<div class="login-head">
-    <h1>QLNA</h1>
-    <p>Quiniela 100x100</p>
+<div class="login-shell">
+    <img class="login-logo" src="/img/logo.svg" alt="Activos 100x100" />
+
+    <div class="card">
+        <div class="card-h">
+            <h1 class="title">Login</h1>
+            <p class="sub">Accede con tu DNI/NIE y contraseña.</p>
+        </div>
+
+        <div class="content">
+            <form method="post" @formname="login" @onsubmit="HandleLogin" data-enhance="false">
+                <AntiforgeryToken />
+
+                <div class="field">
+                    <label for="DniNie">Usuario</label>
+                    <InputText id="DniNie" @bind-Value="Input!.DniNie" autocomplete="username" />
+                </div>
+
+                <div class="field">
+                    <label for="Password">Contraseña</label>
+                    <InputText id="Password" @bind-Value="Input!.Password" type="password" autocomplete="current-password" />
+                </div>
+
+                <div class="row">
+                    <button class="btn-primary" type="submit">Entrar</button>
+                    <a class="link" href="#">Olvidé mi contraseña</a>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <div class="validation">@_error</div>
+                }
+            </form>
+        </div>
+    </div>
 </div>
 
-<EditForm Model="_request" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-
-    <div class="field">
-        <label for="dni">DNI/NIE</label>
-        <InputText id="dni" @bind-Value="_request.dni_nie" class="input" />
-    </div>
-
-    <div class="field">
-        <label for="password">Contraseña</label>
-        <InputText id="password" @bind-Value="_request.password" type="password" class="input" />
-    </div>
-
-    <button class="btn btn-cta btn-block" type="submit" disabled="@_loading">@(_loading ? "Entrando..." : "Entrar")</button>
-
-    @if (!string.IsNullOrWhiteSpace(_error))
-    {
-        <p class="message error login-error">@_error</p>
-    }
-</EditForm>
-
 @code {
-    private readonly LoginRequest _request = new();
-    private string? _error;
-    private bool _loading;
+    [SupplyParameterFromForm] public LoginRequest? Input { get; set; }
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private string? _error;
+
+    protected override void OnInitialized()
     {
-        var state = await AuthStateProvider.GetAuthenticationStateAsync();
-        if (state.User.Identity?.IsAuthenticated == true)
+        Input ??= new LoginRequest();
+
+        if (HttpContext?.User.Identity?.IsAuthenticated == true)
         {
             Navigation.NavigateTo("/pronosticos", forceLoad: true);
         }
@@ -49,25 +65,55 @@
 
     private async Task HandleLogin()
     {
-        if (string.IsNullOrWhiteSpace(_request.dni_nie) || string.IsNullOrWhiteSpace(_request.password))
+        var input = Input ??= new LoginRequest();
+
+        if (string.IsNullOrWhiteSpace(input.DniNie) || string.IsNullOrWhiteSpace(input.Password))
         {
             _error = "DNI/NIE y contraseña son obligatorios.";
             return;
         }
 
-        _loading = true;
-        _error = null;
-
-        var ok = await ApiService.LoginAsync(_request.dni_nie.Trim(), _request.password);
+        var ok = await ApiService.LoginAsync(input.DniNie.Trim(), input.Password);
         if (!ok)
         {
-            _error = "Credenciales incorrectas";
-            _loading = false;
+            _error = "Credenciales incorrectas.";
             return;
         }
 
-        await AuthStateProvider.NotifyLoginAsync();
+        var user = ApiService.UsuarioActual;
+        if (user is null)
+        {
+            _error = "No se pudo iniciar sesión.";
+            return;
+        }
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, ResolveUserId(user)),
+            new(ClaimTypes.Name, user.nombre ?? user.usuario?.nombre ?? input.DniNie),
+            new("access_token", user.access_token ?? string.Empty)
+        };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        await HttpContext!.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties { IsPersistent = true });
+
         Navigation.NavigateTo("/pronosticos", forceLoad: true);
-        _loading = false;
+    }
+
+    private static string ResolveUserId(LoginResponse user)
+        => user.usuario_id?.ToString()
+            ?? user.usuario?.usuario_id?.ToString()
+            ?? user.usuario?.empleado_id?.ToString()
+            ?? "0";
+
+    public class LoginRequest
+    {
+        [Required]
+        public string DniNie { get; set; } = string.Empty;
+        [Required]
+        public string Password { get; set; } = string.Empty;
     }
 }

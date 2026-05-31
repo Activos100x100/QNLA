@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components.Authorization;
 using QLNA.Web.Components;
 using QLNA.Web.Services;
 
@@ -9,22 +8,21 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/login";
-        options.LogoutPath = "/login";
         options.AccessDeniedPath = "/login";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
-        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
-
-builder.Services.AddDataProtection();
+builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddAntiforgery();
+
 builder.Services.AddScoped<SessionTokenStore>();
 builder.Services.AddScoped<AuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthStateProvider>());
 
 builder.Services.AddHttpClient<ApiService>((sp, client) =>
 {

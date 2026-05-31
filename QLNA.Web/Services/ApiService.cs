@@ -15,6 +15,8 @@ public class ApiService
         PropertyNameCaseInsensitive = true
     };
 
+    public LoginResponse? UsuarioActual { get; private set; }
+
     public ApiService(HttpClient client, SessionTokenStore sessionTokenStore)
     {
         _client = client;
@@ -60,7 +62,7 @@ public class ApiService
                 body.nombre = body.usuario?.nombre;
             }
 
-            _sessionTokenStore.SetSession(body.access_token, body);
+            UsuarioActual = body;
             return true;
         }
         catch
@@ -73,6 +75,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             var req = CreateRequest(HttpMethod.Get, "/api/v1/torneos");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -92,6 +95,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             var req = CreateRequest(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/partidos");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -117,6 +121,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             if (partido.pronostico?.goles_local is null || partido.pronostico?.goles_visitante is null)
             {
                 return false;
@@ -165,6 +170,7 @@ public class ApiService
         {
             try
             {
+                await EnsureAuthorizationHeaderAsync();
                 var req = CreateRequest(HttpMethod.Get, route);
                 using var res = await _client.SendAsync(req);
                 if (!res.IsSuccessStatusCode)
@@ -192,6 +198,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             var req = CreateRequest(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/grupos");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -211,6 +218,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             var req = CreateRequest(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/ranking");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -250,6 +258,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             var req = CreateRequest(HttpMethod.Get, $"/api/v1/participante/perfil/{torneoId}");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -269,6 +278,7 @@ public class ApiService
     {
         try
         {
+            await EnsureAuthorizationHeaderAsync();
             var req = CreateRequest(HttpMethod.Put, $"/api/v1/participante/perfil/{torneoId}", request);
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -287,11 +297,7 @@ public class ApiService
     private HttpRequestMessage CreateRequest(HttpMethod method, string path, object? body = null)
     {
         var req = new HttpRequestMessage(method, path);
-        var token = _sessionTokenStore.AccessToken;
-        if (!string.IsNullOrWhiteSpace(token))
-        {
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
+        req.Headers.Authorization = _client.DefaultRequestHeaders.Authorization;
 
         if (body is not null)
         {
@@ -299,6 +305,15 @@ public class ApiService
         }
 
         return req;
+    }
+
+    private Task EnsureAuthorizationHeaderAsync()
+    {
+        var token = _sessionTokenStore.GetAccessToken();
+        _client.DefaultRequestHeaders.Authorization = string.IsNullOrWhiteSpace(token)
+            ? null
+            : new AuthenticationHeaderValue("Bearer", token);
+        return Task.CompletedTask;
     }
 
     private IReadOnlyDictionary<int, Pronostico> ParsePronosticosDictionary(string raw)

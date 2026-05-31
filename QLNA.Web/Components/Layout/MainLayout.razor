@@ -1,16 +1,16 @@
 @inherits LayoutComponentBase
-@inject AuthStateProvider AuthStateProvider
-@inject SessionTokenStore TokenStore
-@inject NavigationManager Navigation
 
 <div class="app-layout">
     <AuthorizeView>
-        <Authorized>
+        <Authorized Context="authState">
             <header class="app-header">
-                <div class="brand">QLNA</div>
+                <img src="/img/logo.svg" alt="Activos 100x100" height="40" />
                 <div class="user-area">
-                    <span class="user-name">@((TokenStore.UsuarioActual?.nombre ?? "Invitado"))</span>
-                    <button class="btn btn-secondary" @onclick="Logout">Salir</button>
+                    <span class="user-name">@(authState.User.Identity?.Name ?? "Usuario")</span>
+                    <form action="/logout" method="post" class="logout-form">
+                        <AntiforgeryToken />
+                        <button class="btn-primary btn-logout" type="submit">Salir</button>
+                    </form>
                 </div>
             </header>
 
@@ -36,11 +36,3 @@
     <a href="." class="reload">Recargar</a>
     <span class="dismiss">🗙</span>
 </div>
-
-@code {
-    private async Task Logout()
-    {
-        await AuthStateProvider.SignOutAsync();
-        Navigation.NavigateTo("/login", forceLoad: true);
-    }
-}
