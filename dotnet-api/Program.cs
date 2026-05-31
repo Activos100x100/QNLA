@@ -10,7 +10,7 @@ using QNLA.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -80,6 +80,7 @@ builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPronosticoService, PronosticoService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
+builder.Services.AddScoped<IParticipantService, ParticipantService>();
 
 var app = builder.Build();
 
@@ -96,5 +97,6 @@ var v1 = app.MapGroup("/api/v1");
 v1.MapGroup("/auth").MapAuthEndpoints();
 v1.MapGroup("/pronosticos").MapPronosticosEndpoints();
 v1.MapGroup("/torneos").MapTorneosEndpoints();
+v1.MapGroup("/participante").MapParticipantsEndpoints();
 
 app.Run();

@@ -34,6 +34,23 @@ public static class AuthEndpoints
             return user is null ? Results.Unauthorized() : Results.Ok(user);
         });
 
-        return group;
+        group.MapPut("/me/{torneoId:int}", async (int torneoId, UpdateParticipantRequest request, ICurrentUser currentUser, IParticipantService participantService) =>
+        {
+            if (currentUser.EmpleadoId is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await participantService.UpdateMyParticipantAsync(
+                torneoId,
+                currentUser.EmpleadoId.Value,
+                request);
+
+            return result is null ? Results.NotFound() : Results.Ok(result);
+
+
+        });
+
+       return group;
     }
 }

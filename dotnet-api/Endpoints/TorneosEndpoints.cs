@@ -33,6 +33,12 @@ public static class TorneosEndpoints
             return Results.Ok(partidos);
         });
 
+        group.MapGet("/{id:int}/grupos", async (int id, IRankingService rankingService) =>
+        {
+            var partidos = await rankingService.GetGruposAsync(id);
+            return Results.Ok(partidos);
+        }); 
+
         group.MapPost("/{id:int}/calcular-puntos/{partidoId:int}", [Authorize] async (int partidoId, IRankingService rankingService) =>
         {
             var updated = await rankingService.CalcularPuntosPartidoAsync(partidoId);

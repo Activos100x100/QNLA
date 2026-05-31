@@ -126,32 +126,52 @@ public sealed class PronosticoService(IConnectionFactory connectionFactory) : IP
         });
     }
 
-    public async Task<IReadOnlyList<PronosticoItemDto>> GetMisPronosticosAsync(int empleadoId, int torneoId)
+public async Task<IReadOnlyList<PronosticoItemDto>> GetMisPronosticosAsync(int empleadoId, int torneoId)
+{
+    return await connectionFactory.WithConnection(async conn =>
     {
-        return await connectionFactory.WithConnection(async conn =>
-        {
-            var rows = await conn.QueryAsync<PronosticoItemDto>(@"
-                SELECT p.id,
-                       p.partido_id,
-                       m.fecha_partido,
-                       m.cierre_pronostico,
-                       sl.nombre AS seleccion_local,
-                       sv.nombre AS seleccion_visitante,
-                       p.goles_local,
-                       p.goles_visitante,
-                       p.puntos_obtenidos
-                FROM qnla_pronosticos p
-                JOIN qnla_participantes pa ON pa.id = p.participante_id
-                JOIN qnla_partidos m ON m.id = p.partido_id
-                LEFT JOIN qnla_selecciones sl ON sl.id = m.seleccion_local_id
-                LEFT JOIN qnla_selecciones sv ON sv.id = m.seleccion_visitante_id
-                WHERE pa.empleado_id = @empleado_id
-                  AND pa.torneo_id = @torneo_id
-                ORDER BY m.fecha_partido", new { empleado_id = empleadoId, torneo_id = torneoId });
+        var rows = (await conn.QueryAsync<PronosticoItemDto>(@"
+            SELECT 
+                p.id AS Id,
+                p.partido_id AS Partido_Id,
+                m.fecha_partido AS Fecha_Partido,
+                m.cierre_pronostico AS Cierre_Pronostico,
+                sl.nombre AS Seleccion_Local,
+                sv.nombre AS Seleccion_Visitante,
+                p.goles_local AS Goles_Local,
+                p.goles_visitante AS Goles_Visitante,
+                p.puntos_obtenidos AS Puntos_Obtenidos
+            FROM qnla_pronosticos p
+            JOIN qnla_participantes pa ON pa.id = p.participante_id
+            JOIN qnla_partidos m ON m.id = p.partido_id
+            LEFT JOIN qnla_selecciones sl ON sl.id = m.seleccion_local_id
+            LEFT JOIN qnla_selecciones sv ON sv.id = m.seleccion_visitante_id
+            WHERE pa.empleado_id = @empleado_id
+              AND pa.torneo_id = @torneo_id
+            ORDER BY m.fecha_partido",
+            new { empleado_id = empleadoId, torneo_id = torneoId }))
+            .ToList();
 
-            return rows.ToList().AsReadOnly();
-        });
-    }
+        if (rows.Count == 0)
+        {
+            rows.Add(new PronosticoItemDto
+            {
+                Id = 0,
+                Partido_Id = 0,
+                Fecha_Partido = DateTime.MinValue,
+                Cierre_Pronostico = DateTime.MinValue,
+                Seleccion_Local = null,
+                Seleccion_Visitante = null,
+                Goles_Local = 0,
+                Goles_Visitante = 0,
+                Puntos_Obtenidos = null
+            });
+        }
+
+        return rows.AsReadOnly();
+    });
+}
+
 
     public async Task<(int statusCode, object payload)> DeletePronosticoAsync(int empleadoId, int pronosticoId)
     {

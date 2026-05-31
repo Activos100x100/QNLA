@@ -10,6 +10,7 @@ public interface IRankingService
     Task<IReadOnlyList<TorneoDto>> GetTorneosActivosAsync();
     Task<IReadOnlyList<PartidoDto>> GetPartidosAsync(int torneoId, bool soloPendientes);
     Task<int> CalcularPuntosPartidoAsync(int partidoId);
+    Task<IReadOnlyList<GrupoDto>> GetGruposAsync(int torneoId);
 }
 
 public sealed class RankingService(IConnectionFactory connectionFactory) : IRankingService
@@ -38,11 +39,11 @@ public sealed class RankingService(IConnectionFactory connectionFactory) : IRank
 
         return await connectionFactory.WithConnection(async conn =>
         {
-            var sql = $"{RankedCte} SELECT * FROM ranked ORDER BY posicion LIMIT @limit;";
+            var sql = $"{RankedCte} SELECT * FROM qnla_v_ranking ORDER BY puntos_totales LIMIT @limit;";
 
             var top = (await conn.QueryAsync<RankingRowDto>(sql, new { torneo_id = torneoId, limit = validatedLimit })).ToList();
 
-            var currentSql = $"{RankedCte} SELECT * FROM ranked WHERE empleado_id = @empleado_id LIMIT 1;";
+            var currentSql = $"{RankedCte} SELECT * FROM qnla_v_ranking WHERE empleado_id = @empleado_id LIMIT 1;";
 
             var myPosition = await conn.QueryFirstOrDefaultAsync<RankingRowDto>(currentSql, new { torneo_id = torneoId, empleado_id = empleadoId });
 
@@ -99,6 +100,21 @@ public sealed class RankingService(IConnectionFactory connectionFactory) : IRank
                 "SELECT public.qnla_calcular_puntos_partido(@partido_id)",
                 new { partido_id = partidoId });
             return updated;
+        });
+    }
+    
+    public async Task<IReadOnlyList<GrupoDto>> GetGruposAsync(int torneoId)
+    {
+        return await connectionFactory.WithConnection(async conn =>
+        {
+            var rows = await conn.QueryAsync<GrupoDto>(@"
+                SELECT id, torneo_id, nombre
+                FROM qnla_grupos
+                WHERE torneo_id = @torneo_id
+                ORDER BY nombre",
+                new { torneo_id = torneoId });
+
+            return rows.ToList().AsReadOnly();
         });
     }
 }

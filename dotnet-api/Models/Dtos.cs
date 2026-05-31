@@ -36,25 +36,37 @@ public sealed record PronosticoUpdateRequest(
     [property: JsonPropertyName("goles_local")] int Goles_Local,
     [property: JsonPropertyName("goles_visitante")] int Goles_Visitante);
 
-public sealed record PronosticoItemDto(
-    int Id,
-    int Partido_Id,
-    DateTime Fecha_Partido,
-    DateTime Cierre_Pronostico,
-    string? Seleccion_Local,
-    string? Seleccion_Visitante,
-    int Goles_Local,
-    int Goles_Visitante,
-    int? Puntos_Obtenidos);
+public sealed class PronosticoItemDto
+{
+    public int Id { get; set; }
+    public int Partido_Id { get; set; }
+    public DateTime Fecha_Partido { get; set; }
+    public DateTime Cierre_Pronostico { get; set; }
+    public string? Seleccion_Local { get; set; }
+    public string? Seleccion_Visitante { get; set; }
+    public int Goles_Local { get; set; }
+    public int Goles_Visitante { get; set; }
+    public int? Puntos_Obtenidos { get; set; }
+}
 
-public sealed record TorneoDto(
-    int Id,
-    string Nombre,
-    int? Anio,
-    bool Activo,
-    DateTime? Cierre_Inscripcion,
-    DateOnly? Fecha_Inicio,
-    DateOnly? Fecha_Fin);
+public class TorneoDto
+{
+    public int Id { get; init; }
+    public string Nombre { get; init; } = string.Empty;
+    public int Anio { get; init; }
+    public bool Activo { get; init; }
+    public DateTime Cierre_Inscripcion { get; init; }  // nombre exacto = columna SQL
+    public DateTime Fecha_Inicio { get; init; }
+    public DateTime Fecha_Fin { get; init; }
+}
+
+public class GrupoDto
+{
+    public int Id { get; init; }
+    public int TorneoId { get; init; }
+    public string Nombre { get; init; } = string.Empty;
+}
+
 
 public sealed record PartidoDto(
     int Id,
@@ -70,17 +82,35 @@ public sealed record PartidoDto(
     bool Finalizado);
 
 public sealed record RankingRowDto(
-    int Posicion,
     int Torneo_Id,
     int Participante_Id,
     int Empleado_Id,
     string? Nombre_Completo,
     string? Alias,
-    int Pronosticos_Realizados,
-    int Aciertos_Exactos,
-    int Aciertos_Ganador,
-    int Puntos_Totales);
+    long Pronosticos_Realizados,
+    long Aciertos_Exactos,
+    long Aciertos_Ganador,
+    long Puntos_Totales);
 
 public sealed record RankingResponse(
     IReadOnlyList<RankingRowDto> Top,
     RankingRowDto? Mi_Posicion);
+
+public sealed record UpdateParticipantRequest(
+    [property: JsonPropertyName("Nombre")] string Nombre,
+    [property: JsonPropertyName("Alias")] string Alias
+);
+
+
+
+
+public sealed record ParticipantDto(
+    int Id,
+    int Torneo_Id,
+    int Empleado_Id,
+    string? Nombre,
+    string? Alias,
+    string? Email,
+    bool Activo,
+    bool Es_Admin
+);
