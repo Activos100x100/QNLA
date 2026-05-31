@@ -185,16 +185,44 @@ strong {
     min-width: 0;
 }
 
-/* ── Group banner ────────────────────────────────────────────── */
+/* ── Group accordion ─────────────────────────────────────────── */
+.grupo-accordion {
+    margin: 24px 0 12px;
+    border-radius: 14px;
+}
+
+.grupo-accordion:first-of-type {
+    margin-top: 0;
+}
+
 .grupo-banner {
     width: 100%;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     background: linear-gradient(90deg, #f4c430, #ffdd55);
     color: #0b0b0b;
     font-weight: 800;
     font-size: 1rem;
-    padding: 12px 20px;
+    padding: 14px 20px;
     border-radius: 10px;
-    margin: 24px 0 12px;
+    cursor: pointer;
+}
+
+.grupo-banner::-webkit-details-marker {
+    display: none;
+}
+
+.grupo-banner-meta {
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+.grupo-accordion-body {
+    padding-top: 12px;
 }
 
 /* ── Match card v2 ───────────────────────────────────────────── */

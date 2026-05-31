@@ -1,5 +1,9 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using QLNA.Web.Components;
+using QLNA.Web.Models;
 using QLNA.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,8 +49,59 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
+app.MapPost("/auth/login", async (
+    [FromForm] LoginForm form,
+    HttpContext httpContext,
+    ApiService apiService) =>
+{
+    if (string.IsNullOrWhiteSpace(form.DniNie) || string.IsNullOrWhiteSpace(form.Password))
+    {
+        return Results.LocalRedirect("/login?error=missing");
+    }
+
+    var ok = await apiService.LoginAsync(form.DniNie.Trim(), form.Password);
+    var user = apiService.UsuarioActual;
+    if (!ok || user is null)
+    {
+        return Results.LocalRedirect("/login?error=invalid");
+    }
+
+    var claims = new List<Claim>
+    {
+        new(ClaimTypes.NameIdentifier, ResolveUserId(user)),
+        new(ClaimTypes.Name, user.nombre ?? user.usuario?.nombre ?? form.DniNie.Trim()),
+        new("access_token", user.access_token ?? string.Empty)
+    };
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+    await httpContext.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        new ClaimsPrincipal(identity),
+        new AuthenticationProperties { IsPersistent = true });
+
+    return Results.LocalRedirect("/pronosticos");
+}).AllowAnonymous();
+
+app.MapPost("/auth/logout", async (HttpContext httpContext) =>
+{
+    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.LocalRedirect("/login");
+}).AllowAnonymous();
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+static string ResolveUserId(LoginResponse user)
+    => user.usuario_id?.ToString()
+        ?? user.usuario?.usuario_id?.ToString()
+        ?? user.usuario?.empleado_id?.ToString()
+        ?? "0";
+
+internal sealed class LoginForm
+{
+    public string DniNie { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
