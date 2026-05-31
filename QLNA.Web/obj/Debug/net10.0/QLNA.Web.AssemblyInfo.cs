@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QLNA.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ae26829c2c88ac5fee9cddf40ad9ba6f53c3169f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+546b481e757fe9de0e9838497fb3c436a865b5c1")]
 [assembly: System.Reflection.AssemblyProductAttribute("QLNA.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QLNA.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
