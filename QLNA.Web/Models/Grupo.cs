@@ -7,7 +7,7 @@ public class Grupo
     [JsonPropertyName("id")]
     public int id { get; set; }
     [JsonPropertyName("torneoId")]
-    public int torneoId { get; set; }
+    public int torneo_id { get; set; }
     [JsonPropertyName("nombre")]
     public string? nombre { get; set; }
     [JsonPropertyName("partidos")]
