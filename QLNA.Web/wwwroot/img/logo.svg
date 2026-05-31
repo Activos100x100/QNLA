@@ -1,16 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" role="img" aria-labelledby="logoTitle logoDesc">
-  <title id="logoTitle">Activos 100x100</title>
-  <desc id="logoDesc">Logotipo con corona dorada y texto ACTIVOS 100X100.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" role="img" aria-label="Activos 100x100">
   <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#f4c430" />
-      <stop offset="100%" stop-color="#ffdd55" />
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#ffe066"/>
+      <stop offset="45%" stop-color="#f4c430"/>
+      <stop offset="100%" stop-color="#b8860b"/>
     </linearGradient>
+    <linearGradient id="goldDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#8b6508"/>
+    </linearGradient>
+    <radialGradient id="bead" cx="0.35" cy="0.30" r="0.7">
+      <stop offset="0%"  stop-color="#fff4b0"/>
+      <stop offset="50%" stop-color="#f4c430"/>
+      <stop offset="100%" stop-color="#9c7a0a"/>
+    </radialGradient>
   </defs>
-  <g transform="translate(8 8)">
-    <path fill="url(#gold)" d="M18 38 8 20l12 6 8-16 8 16 12-6-10 18z"/>
-    <rect x="10" y="38" width="36" height="8" rx="4" fill="url(#gold)"/>
-  </g>
-  <text x="62" y="34" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="900" fill="#ffffff" letter-spacing="1">ACTIVOS</text>
-  <text x="62" y="57" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="900" fill="url(#gold)" letter-spacing="1">100X100</text>
+
+  <!-- Cuerpo de la corona: 5 picos, 3 centrales altos -->
+  <path d="
+    M 20 100
+    L 28 38
+    L 60 70
+    L 78 28
+    L 100 14
+    L 122 28
+    L 140 70
+    L 172 38
+    L 180 100
+    Z"
+    fill="url(#gold)" stroke="url(#goldDark)" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- Piedras (beads) sobre los 5 picos -->
+  <circle cx="28"  cy="34"  r="7"  fill="url(#bead)" stroke="#8b6508" stroke-width="1"/>
+  <circle cx="78"  cy="24"  r="8"  fill="url(#bead)" stroke="#8b6508" stroke-width="1"/>
+  <circle cx="100" cy="10"  r="9"  fill="url(#bead)" stroke="#8b6508" stroke-width="1"/>
+  <circle cx="122" cy="24"  r="8"  fill="url(#bead)" stroke="#8b6508" stroke-width="1"/>
+  <circle cx="172" cy="34"  r="7"  fill="url(#bead)" stroke="#8b6508" stroke-width="1"/>
+
+  <!-- Banda inferior dorada -->
+  <rect x="18" y="96" width="164" height="20" rx="3"
+        fill="url(#gold)" stroke="url(#goldDark)" stroke-width="2"/>
+
+  <!-- Pequeño reflejo en la banda -->
+  <rect x="22" y="100" width="156" height="3" rx="2" fill="rgba(255,244,176,.55)"/>
 </svg>

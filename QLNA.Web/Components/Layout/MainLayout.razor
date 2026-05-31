@@ -3,27 +3,54 @@
 <div class="app-layout">
     <AuthorizeView>
         <Authorized Context="authState">
-            <header class="app-header">
-                <img src="/img/logo.svg" alt="Activos 100x100" height="40" />
-                <div class="user-area">
-                    <span class="user-name">@(authState.User.Identity?.Name ?? "Usuario")</span>
-                    <form action="/logout" method="post" class="logout-form">
-                        <AntiforgeryToken />
-                        <button class="btn-primary btn-logout" type="submit">Salir</button>
-                    </form>
+            <header class="top-nav">
+                <div class="top-nav-inner">
+                    <a href="/pronosticos" class="brand-link">
+                        <img src="/img/logo.svg" alt="Activos 100x100" class="brand-logo" />
+                    </a>
+
+                    <nav class="top-tabs" aria-label="Navegación principal">
+                        <NavLink class="tab-link" href="/pronosticos" Match="NavLinkMatch.All">
+                            <span class="tab-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <span class="tab-text">Pronósticos</span>
+                        </NavLink>
+                        <NavLink class="tab-link" href="/ranking">
+                            <span class="tab-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 18h14M8 18V9m4 9V6m4 12v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <span class="tab-text">Ranking</span>
+                        </NavLink>
+                        <NavLink class="tab-link" href="/perfil">
+                            <span class="tab-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <span class="tab-text">Perfil</span>
+                        </NavLink>
+                    </nav>
+
+                    <div class="user-area">
+                        <span class="user-name">@(authState.User.Identity?.Name ?? "Usuario")</span>
+                        <form action="/logout" method="post" class="logout-form">
+                            <AntiforgeryToken />
+                            <button class="btn-logout" type="submit">Salir</button>
+                        </form>
+                    </div>
                 </div>
             </header>
 
-            <div class="app-shell">
-                <aside class="app-nav">
-                    <NavMenu />
-                </aside>
-                <main class="app-main">
-                    <div class="app-content">
-                        @Body
-                    </div>
-                </main>
-            </div>
+            <main class="app-main">
+                <div class="app-content">
+                    @Body
+                </div>
+            </main>
         </Authorized>
         <NotAuthorized>
             @Body

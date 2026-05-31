@@ -19,4 +19,7 @@ public class RankingEntryDto
     public string? nombre_completo { get; set; }
     public string? alias { get; set; }
     public int? puntos_totales { get; set; }
+    public int? total_pronosticos { get; set; }
+    public int? aciertos_exactos { get; set; }
+    public int? aciertos_ganador { get; set; }
 }

@@ -75,8 +75,7 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
-            var req = CreateRequest(HttpMethod.Get, "/api/v1/torneos");
+            var req = await CreateRequestAsync(HttpMethod.Get, "/api/v1/torneos");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -95,8 +94,7 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
-            var req = CreateRequest(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/partidos");
+            var req = await CreateRequestAsync(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/partidos");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -121,7 +119,6 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
             if (partido.pronostico?.goles_local is null || partido.pronostico?.goles_visitante is null)
             {
                 return false;
@@ -138,12 +135,12 @@ public class ApiService
             HttpResponseMessage res;
             if (partido.pronostico.id > 0)
             {
-                var req = CreateRequest(HttpMethod.Put, $"/api/v1/pronosticos/{partido.pronostico.id}", payload);
+                var req = await CreateRequestAsync(HttpMethod.Put, $"/api/v1/pronosticos/{partido.pronostico.id}", payload);
                 res = await _client.SendAsync(req);
             }
             else
             {
-                var req = CreateRequest(HttpMethod.Post, "/api/v1/pronosticos", payload);
+                var req = await CreateRequestAsync(HttpMethod.Post, "/api/v1/pronosticos", payload);
                 res = await _client.SendAsync(req);
             }
 
@@ -170,8 +167,7 @@ public class ApiService
         {
             try
             {
-                await EnsureAuthorizationHeaderAsync();
-                var req = CreateRequest(HttpMethod.Get, route);
+                var req = await CreateRequestAsync(HttpMethod.Get, route);
                 using var res = await _client.SendAsync(req);
                 if (!res.IsSuccessStatusCode)
                 {
@@ -198,8 +194,7 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
-            var req = CreateRequest(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/grupos");
+            var req = await CreateRequestAsync(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/grupos");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -218,8 +213,7 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
-            var req = CreateRequest(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/ranking");
+            var req = await CreateRequestAsync(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/ranking");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -258,8 +252,7 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
-            var req = CreateRequest(HttpMethod.Get, $"/api/v1/participante/perfil/{torneoId}");
+            var req = await CreateRequestAsync(HttpMethod.Get, $"/api/v1/participante/perfil/{torneoId}");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -278,8 +271,7 @@ public class ApiService
     {
         try
         {
-            await EnsureAuthorizationHeaderAsync();
-            var req = CreateRequest(HttpMethod.Put, $"/api/v1/participante/perfil/{torneoId}", request);
+            var req = await CreateRequestAsync(HttpMethod.Put, $"/api/v1/participante/perfil/{torneoId}", request);
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -294,10 +286,14 @@ public class ApiService
         }
     }
 
-    private HttpRequestMessage CreateRequest(HttpMethod method, string path, object? body = null)
+    private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string path, object? body = null)
     {
         var req = new HttpRequestMessage(method, path);
-        req.Headers.Authorization = _client.DefaultRequestHeaders.Authorization;
+        var token = await _sessionTokenStore.GetAccessTokenAsync();
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
 
         if (body is not null)
         {
@@ -305,15 +301,6 @@ public class ApiService
         }
 
         return req;
-    }
-
-    private Task EnsureAuthorizationHeaderAsync()
-    {
-        var token = _sessionTokenStore.GetAccessToken();
-        _client.DefaultRequestHeaders.Authorization = string.IsNullOrWhiteSpace(token)
-            ? null
-            : new AuthenticationHeaderValue("Bearer", token);
-        return Task.CompletedTask;
     }
 
     private IReadOnlyDictionary<int, Pronostico> ParsePronosticosDictionary(string raw)
