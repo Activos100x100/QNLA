@@ -20,19 +20,19 @@
 <div class="ranking-list">
     @foreach (var item in _ranking.entradas)
     {
-        var pos = item.posicion ?? 0;
-        var itemUserId = item.usuario_id ?? item.empleado_id;
+        var pos = item.posicion;
+        var itemUserId = item.participante_id ?? item.usuario_id ?? item.empleado_id;
         var isMe = itemUserId == _currentUserId;
         <div class="rank-card @(isMe ? "rank-card-me" : string.Empty)">
             <div class="rank-avatar rank-avatar-@AvatarClass(pos)">
                 <span class="rank-pos-num">@pos</span>
             </div>
             <div class="rank-info">
-                <span class="rank-name">@(item.nombre ?? item.nombre_completo ?? item.alias ?? "—")</span>
-                <span class="rank-stats">@(item.total_pronosticos ?? 0) pronósticos · @(item.aciertos_exactos ?? 0) exactos · @(item.aciertos_ganador ?? 0) ganador</span>
+                <span class="rank-name">@(item.nombre ?? item.alias ?? item.email ?? "—")</span>
+                <span class="rank-stats">@item.partidos_pronosticados pronósticos · @item.aciertos_exactos exactos · @item.aciertos_ganador ganador</span>
             </div>
             <div class="rank-pts">
-                <span class="rank-pts-num">@(item.puntos ?? item.puntos_totales ?? 0)</span>
+                <span class="rank-pts-num">@item.puntos</span>
                 <span class="rank-pts-label">puntos</span>
             </div>
         </div>

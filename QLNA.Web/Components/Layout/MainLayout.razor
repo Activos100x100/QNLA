@@ -6,7 +6,7 @@
             <header class="top-nav">
                 <div class="top-nav-inner">
                     <a href="/pronosticos" class="brand-link">
-                        <img src="/img/logo.svg" alt="Activos 100x100" class="brand-logo" />
+                        <img src="/img/logo.png" alt="Activos 100x100" class="brand-logo" />
                     </a>
 
                     <nav class="top-tabs" aria-label="Navegación principal">
@@ -38,7 +38,7 @@
 
                     <div class="user-area">
                         <span class="user-name">@(authState.User.Identity?.Name ?? "Usuario")</span>
-                        <form action="/logout" method="post" class="logout-form">
+                        <form action="/auth/logout" method="post" class="logout-form">
                             <AntiforgeryToken />
                             <button class="btn-logout" type="submit">Salir</button>
                         </form>

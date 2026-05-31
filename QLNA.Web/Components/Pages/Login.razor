@@ -1,43 +1,41 @@
 @page "/login"
 @layout AuthLayout
 @attribute [AllowAnonymous]
-@inject ApiService ApiService
 @inject NavigationManager Navigation
-@using System.ComponentModel.DataAnnotations
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
 
 <PageTitle>Login - QLNA</PageTitle>
 
 <div class="login-shell">
-    <img class="login-logo" src="/img/logo.svg" alt="Activos 100x100" />
+    <div class="login-brand">
+        <img class="login-logo" src="/img/logo.png" alt="Activos 100x100" />
+        <p class="login-brand-copy">Accede a la quiniela con tu usuario y contraseña.</p>
+    </div>
 
-    <div class="card">
+    <div class="card login-card">
         <div class="card-h">
-            <h1 class="title">Login</h1>
-            <p class="sub">Accede con tu DNI/NIE y contraseña.</p>
+            <h1 class="title">Iniciar sesión</h1>
+            <p class="sub">Usa las credenciales que te ha facilitado el equipo.</p>
         </div>
 
         <div class="content">
-            <form method="post" @formname="login" @onsubmit="HandleLogin" data-enhance="false">
+            <form method="post" action="/auth/login" data-enhance="false">
                 <AntiforgeryToken />
 
                 <div class="field">
                     <label for="DniNie">Usuario</label>
-                    <InputText id="DniNie" @bind-Value="Input!.DniNie" autocomplete="username" />
+                    <input id="DniNie" name="DniNie" autocomplete="username" required />
                 </div>
 
                 <div class="field">
                     <label for="Password">Contraseña</label>
-                    <InputText id="Password" @bind-Value="Input!.Password" type="password" autocomplete="current-password" />
+                    <input id="Password" name="Password" type="password" autocomplete="current-password" required />
                 </div>
 
                 <div class="row">
                     <button class="btn-primary btn-full" type="submit">Entrar</button>
                 </div>
 
-                @if (!string.IsNullOrEmpty(_error))
+                @if (!string.IsNullOrWhiteSpace(_error))
                 {
                     <div class="validation">@_error</div>
                 }
@@ -47,72 +45,24 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm] public LoginRequest? Input { get; set; }
     [CascadingParameter] public HttpContext? HttpContext { get; set; }
+    [SupplyParameterFromQuery(Name = "error")] public string? ErrorCode { get; set; }
 
     private string? _error;
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        Input ??= new LoginRequest();
-
         if (HttpContext?.User.Identity?.IsAuthenticated == true)
         {
             Navigation.NavigateTo("/pronosticos", forceLoad: true);
-        }
-    }
-
-    private async Task HandleLogin()
-    {
-        var input = Input ??= new LoginRequest();
-
-        if (string.IsNullOrWhiteSpace(input.DniNie) || string.IsNullOrWhiteSpace(input.Password))
-        {
-            _error = "DNI/NIE y contraseña son obligatorios.";
             return;
         }
 
-        var ok = await ApiService.LoginAsync(input.DniNie.Trim(), input.Password);
-        if (!ok)
+        _error = ErrorCode switch
         {
-            _error = "Credenciales incorrectas.";
-            return;
-        }
-
-        var user = ApiService.UsuarioActual;
-        if (user is null)
-        {
-            _error = "No se pudo iniciar sesión.";
-            return;
-        }
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, ResolveUserId(user)),
-            new(ClaimTypes.Name, user.nombre ?? user.usuario?.nombre ?? input.DniNie),
-            new("access_token", user.access_token ?? string.Empty)
+            "missing" => "Usuario y contraseña son obligatorios.",
+            "invalid" => "Credenciales incorrectas.",
+            _ => null
         };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-        await HttpContext!.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity),
-            new AuthenticationProperties { IsPersistent = true });
-
-        Navigation.NavigateTo("/pronosticos", forceLoad: true);
-    }
-
-    private static string ResolveUserId(LoginResponse user)
-        => user.usuario_id?.ToString()
-            ?? user.usuario?.usuario_id?.ToString()
-            ?? user.usuario?.empleado_id?.ToString()
-            ?? "0";
-
-    public class LoginRequest
-    {
-        [Required]
-        public string DniNie { get; set; } = string.Empty;
-        [Required]
-        public string Password { get; set; } = string.Empty;
     }
 }

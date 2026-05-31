@@ -221,23 +221,35 @@ public class ApiService
             }
 
             var raw = await res.Content.ReadAsStringAsync();
-            var ranking = JsonSerializer.Deserialize<RankingResponseDto>(raw, _jsonOptions) ?? new RankingResponseDto();
+            using var doc = JsonDocument.Parse(raw);
+            var root = doc.RootElement;
 
-            if (ranking.entradas.Count == 0 && ranking.top is { Count: > 0 })
+            var ranking = root.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<RankingResponseDto>(raw, _jsonOptions) ?? new RankingResponseDto()
+                : new RankingResponseDto();
+
+            if (root.ValueKind == JsonValueKind.Array)
             {
-                ranking.entradas = ranking.top.Select(x => new RankingEntryDto
+                ranking.entradas = JsonSerializer.Deserialize<List<RankingEntryDto>>(raw, _jsonOptions) ?? new();
+            }
+            else if (ranking.entradas.Count == 0)
+            {
+                foreach (var prop in new[] { "entradas", "ranking", "top", "items", "data" })
                 {
-                    posicion = x.posicion,
-                    usuario_id = x.usuario_id ?? x.empleado_id,
-                    nombre = x.nombre ?? x.nombre_completo ?? x.alias,
-                    puntos = x.puntos ?? x.puntos_totales
-                }).ToList();
+                    if (!root.TryGetProperty(prop, out var arr) || arr.ValueKind != JsonValueKind.Array)
+                    {
+                        continue;
+                    }
+
+                    ranking.entradas = JsonSerializer.Deserialize<List<RankingEntryDto>>(arr.GetRawText(), _jsonOptions) ?? new();
+                    break;
+                }
             }
 
             if (ranking.mi_posicion is null && ranking.mi_posicion_detalle is { } detalle)
             {
                 ranking.mi_posicion = detalle.posicion;
-                ranking.mis_puntos = detalle.puntos ?? detalle.puntos_totales;
+                ranking.mis_puntos = detalle.puntos;
             }
 
             return ranking;

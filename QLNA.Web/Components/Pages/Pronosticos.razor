@@ -46,46 +46,55 @@ else
 
     @foreach (var grupo in _grupos)
     {
-        <div class="grupo-banner">@grupo.nombre</div>
-        @foreach (var partido in (grupo.partidos ?? new()))
-        {
-            var pid = partido.id;
-            <div class="match-card-v2">
-                <div class="match-date">@partido.fecha.ToString("dd MMM yyyy HH:mm")</div>
-                <div class="match-teams">
-                    <div class="team-col">
-                        <span class="team-name">@(partido.equipo_local ?? "Local")</span>
-                        <input type="number"
-                               class="goal-input-sq"
-                               min="0" max="99"
-                               value="@partido.pronostico?.goles_local"
-                               @onchange="@(e => OnGoalChanged(partido, true, e))"
-                               disabled="@PartidoBloqueado(partido)" />
-                    </div>
-                    <span class="vs-sep">vs</span>
-                    <div class="team-col">
-                        <span class="team-name">@(partido.equipo_visitante ?? "Visitante")</span>
-                        <input type="number"
-                               class="goal-input-sq"
-                               min="0" max="99"
-                               value="@partido.pronostico?.goles_visitante"
-                               @onchange="@(e => OnGoalChanged(partido, false, e))"
-                               disabled="@PartidoBloqueado(partido)" />
-                    </div>
-                </div>
-                @if (partido.goles_local_real.HasValue && partido.goles_visitante_real.HasValue)
+        var partidosGrupo = grupo.partidos ?? new();
+        <details class="grupo-accordion" open="@IsGroupExpanded(grupo.id)">
+            <summary class="grupo-banner" @onclick:preventDefault="true" @onclick="() => ToggleGroup(grupo.id)">
+                <span>@grupo.nombre</span>
+                <span class="grupo-banner-meta">@partidosGrupo.Count partidos</span>
+            </summary>
+
+            <div class="grupo-accordion-body">
+                @foreach (var partido in partidosGrupo)
                 {
-                    <small class="muted">Resultado oficial: @partido.goles_local_real - @partido.goles_visitante_real</small>
+                    var pid = partido.id;
+                    <div class="match-card-v2">
+                        <div class="match-date">@partido.fecha.ToString("dd MMM yyyy HH:mm")</div>
+                        <div class="match-teams">
+                            <div class="team-col">
+                                <span class="team-name">@(partido.equipo_local ?? "Local")</span>
+                                <input type="number"
+                                       class="goal-input-sq"
+                                       min="0" max="99"
+                                       value="@partido.pronostico?.goles_local"
+                                       @onchange="@(e => OnGoalChanged(partido, true, e))"
+                                       disabled="@PartidoBloqueado(partido)" />
+                            </div>
+                            <span class="vs-sep">vs</span>
+                            <div class="team-col">
+                                <span class="team-name">@(partido.equipo_visitante ?? "Visitante")</span>
+                                <input type="number"
+                                       class="goal-input-sq"
+                                       min="0" max="99"
+                                       value="@partido.pronostico?.goles_visitante"
+                                       @onchange="@(e => OnGoalChanged(partido, false, e))"
+                                       disabled="@PartidoBloqueado(partido)" />
+                            </div>
+                        </div>
+                        @if (partido.goles_local_real.HasValue && partido.goles_visitante_real.HasValue)
+                        {
+                            <small class="muted">Resultado oficial: @partido.goles_local_real - @partido.goles_visitante_real</small>
+                        }
+                        <div class="match-save-row">
+                            <button class="btn-save-match @GetSaveClass(pid)"
+                                    @onclick="@(() => GuardarPartido(partido))"
+                                    disabled="@IsSaving(pid)">
+                                @GetSaveText(pid)
+                            </button>
+                        </div>
+                    </div>
                 }
-                <div class="match-save-row">
-                    <button class="btn-save-match @GetSaveClass(pid)"
-                            @onclick="@(() => GuardarPartido(partido))"
-                            disabled="@IsSaving(pid)">
-                        @GetSaveText(pid)
-                    </button>
-                </div>
             </div>
-        }
+        </details>
     }
 }
 
@@ -100,6 +109,7 @@ else
 
     // Save state per partido: "idle" | "saving" | "saved" | "error"
     private readonly Dictionary<int, string> _saveState = new();
+    private readonly Dictionary<int, bool> _expandedGroups = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,6 +133,7 @@ else
     {
         _saveState.Clear();
         _grupos.Clear();
+        _expandedGroups.Clear();
 
         // 1. Try to get grupos with nested partidos
         var grupos = (await ApiService.GetGruposAsync(_torneoSeleccionadoId)).ToList();
@@ -147,7 +158,13 @@ else
                     }
                 }
             }
-            _grupos = grupos;
+            _grupos = grupos
+                .Select(g =>
+                {
+                    g.partidos = (g.partidos ?? new()).OrderBy(p => p.fecha).ToList();
+                    return g;
+                })
+                .ToList();
         }
         else
         {
@@ -167,27 +184,52 @@ else
 
             if (grupos.Count > 0)
             {
-                // Grupos exist but partidos were empty — try to fill from flat list using grupo_id if available
-                _grupos = grupos.Select(g => new Grupo
+                _grupos = grupos
+                    .Select(g => new Grupo
+                    {
+                        id = g.id,
+                        nombre = g.nombre,
+                        partidos = partidos.Where(p => p.grupo_id == g.id).ToList()
+                    })
+                    .Where(g => g.partidos is { Count: > 0 })
+                    .ToList();
+
+                var sinGrupo = partidos.Where(p => p.grupo_id is null || grupos.All(g => g.id != p.grupo_id)).ToList();
+                if (sinGrupo.Count > 0)
                 {
-                    id = g.id,
-                    nombre = g.nombre,
-                    partidos = partidos.ToList()
-                }).Take(1).ToList();
-                if (_grupos.Count == 1)
-                {
-                    _grupos[0].partidos = partidos;
+                    _grupos.Add(new Grupo { id = 0, nombre = "Otros partidos", partidos = sinGrupo });
                 }
             }
-            else
+
+            if (_grupos.Count == 0)
             {
-                // No groups at all — show all under a single banner
-                _grupos = new List<Grupo>
+                var agrupadosPorId = partidos
+                    .Where(p => p.grupo_id.HasValue)
+                    .GroupBy(p => p.grupo_id!.Value)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new Grupo
+                    {
+                        id = g.Key,
+                        nombre = $"Grupo {g.Key}",
+                        partidos = g.ToList()
+                    })
+                    .ToList();
+
+                if (agrupadosPorId.Count > 0)
                 {
-                    new Grupo { id = 0, nombre = "Partidos", partidos = partidos }
-                };
+                    _grupos = agrupadosPorId;
+                }
+                else
+                {
+                    _grupos = new List<Grupo>
+                    {
+                        new() { id = 0, nombre = "Partidos", partidos = partidos }
+                    };
+                }
             }
         }
+
+        SetDefaultExpandedGroups();
 
         // Calculate counters
         var allPartidos = _grupos.SelectMany(g => g.partidos ?? new()).ToList();
@@ -214,6 +256,12 @@ else
     private bool IsSaving(int partidoId)
         => _saveState.TryGetValue(partidoId, out var s) && s == "saving";
 
+    private bool IsGroupExpanded(int groupId)
+        => !_expandedGroups.TryGetValue(groupId, out var expanded) || expanded;
+
+    private void ToggleGroup(int groupId)
+        => _expandedGroups[groupId] = !IsGroupExpanded(groupId);
+
     private string GetSaveClass(int partidoId)
     {
         if (!_saveState.TryGetValue(partidoId, out var s)) return string.Empty;
@@ -239,6 +287,7 @@ else
 
     private async Task GuardarPartido(Partido partido)
     {
+        var estabaCompleto = partido.pronostico?.id > 0;
         _saveState[partido.id] = "saving";
         StateHasChanged();
 
@@ -247,8 +296,12 @@ else
 
         if (ok)
         {
-            // Increment counter directly since only one partido changed
-            _completos++;
+            partido.pronostico ??= new Pronostico { partido_id = partido.id };
+            partido.pronostico.id = Math.Max(partido.pronostico.id, 1);
+            if (!estabaCompleto)
+            {
+                _completos++;
+            }
             _porHacer = _totalPartidos - _completos;
         }
 
@@ -259,6 +312,21 @@ else
             await Task.Delay(2000);
             _saveState[partido.id] = "idle";
             StateHasChanged();
+        }
+    }
+
+    private void SetDefaultExpandedGroups()
+    {
+        foreach (var grupo in _grupos)
+        {
+            _expandedGroups[grupo.id] = false;
+        }
+
+        var grupoPendiente = _grupos.FirstOrDefault(g => (g.partidos ?? new()).Any(p => (p.pronostico?.id ?? 0) <= 0));
+        var grupoInicial = grupoPendiente ?? _grupos.FirstOrDefault();
+        if (grupoInicial is not null)
+        {
+            _expandedGroups[grupoInicial.id] = true;
         }
     }
 }
