@@ -12,7 +12,6 @@ public class RankingResponseDto
     public int? mis_puntos { get; set; }
     [JsonPropertyName("top")]
     public List<RankingEntryDto>? top { get; set; }
-    [JsonPropertyName("mi_posicion")]
     public RankingEntryDto? mi_posicion_detalle { get; set; }
 }
 

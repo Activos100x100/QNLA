@@ -15,7 +15,6 @@ public class Partido
     public int? sede_id { get; set; }
     public int seleccion_local_id { get; set; }
     public int seleccion_visitante_id { get; set; }
-    // API expone seleccion_local/seleccion_visitante; mantenemos *_nombre por compatibilidad con la UI.
     [JsonPropertyName("seleccion_local")]
     public string? seleccion_local_nombre { get; set; }
     [JsonPropertyName("seleccion_visitante")]

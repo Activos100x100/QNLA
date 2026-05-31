@@ -248,7 +248,7 @@ public class ApiService
 
             if (ranking.entradas.Count == 0 && ranking.top is { Count: > 0 })
             {
-                ranking.entradas = ranking.top;
+                ranking.entradas = ranking.top.ToList();
             }
 
             if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("mis_puntos", out var misPuntosProp) &&
@@ -257,10 +257,16 @@ public class ApiService
                 ranking.mis_puntos = misPuntos;
             }
 
-            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("mi_posicion", out var miPosProp) &&
-                miPosProp.ValueKind is JsonValueKind.Number && miPosProp.TryGetInt32(out var miPosicion))
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("mi_posicion", out var miPosicionProp))
             {
-                ranking.mi_posicion = miPosicion;
+                if (miPosicionProp.ValueKind is JsonValueKind.Number && miPosicionProp.TryGetInt32(out var miPosicion))
+                {
+                    ranking.mi_posicion = miPosicion;
+                }
+                else if (miPosicionProp.ValueKind is JsonValueKind.Object)
+                {
+                    ranking.mi_posicion_detalle = JsonSerializer.Deserialize<RankingEntryDto>(miPosicionProp.GetRawText(), _jsonOptions);
+                }
             }
 
             if (ranking.mi_posicion is null && ranking.mi_posicion_detalle is { } detalle)
