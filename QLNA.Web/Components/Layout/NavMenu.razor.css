@@ -1,12 +1,12 @@
 .menu {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    background: var(--bg-surface-elevated);
+    background: rgba(18,18,18,.92);
 }
 
 .menu-link {
     text-decoration: none;
-    color: var(--color-text-muted);
+    color: var(--muted);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -15,12 +15,12 @@
     padding: 0.65rem 0.35rem 0.55rem;
     border-top: 2px solid transparent;
     font-size: 0.72rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .menu-link.active {
-    color: var(--color-accent);
-    border-top-color: var(--color-accent);
+    color: var(--brand-yellow);
+    border-top-color: var(--brand-yellow);
 }
 
 .menu-icon {
@@ -54,9 +54,10 @@
     }
 
     .menu-link.active {
-        color: var(--color-primary);
-        background: var(--bg-surface);
-        border-left-color: var(--color-accent);
+        color: var(--brand-yellow);
+        background: rgba(244,196,48,.08);
+        border-left-color: transparent;
+        border-image: linear-gradient(180deg, var(--brand-yellow), var(--brand-yellow2)) 1;
     }
 
     .menu-text {

@@ -1,4 +1,5 @@
 @page "/perfil"
+@rendermode InteractiveServer
 @attribute [Authorize]
 @inject ApiService ApiService
 
@@ -49,11 +50,11 @@ else
         <div class="actions">
             @if (!_editMode)
             {
-                <button class="btn btn-secondary" @onclick="ActivarEdicion">Editar</button>
+                <button class="btn-secondary" @onclick="ActivarEdicion">Editar</button>
             }
             else
             {
-                <button class="btn btn-cta" @onclick="Guardar">Guardar</button>
+                <button class="btn-primary" @onclick="Guardar">Guardar</button>
             }
         </div>
     </div>

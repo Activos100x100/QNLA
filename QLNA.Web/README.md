@@ -34,3 +34,13 @@ gcloud run deploy qlna-web \
 ```
 
 Esta app comparte el mismo backend usado por QLNA Mobile.
+
+## Cambiar el logo
+
+El proyecto usa por defecto `wwwroot/img/logo.svg` (vectorial).
+
+Cuando tengáis el PNG corporativo real:
+
+1. Añadid `wwwroot/img/logo.png`.
+2. Cambiad `src="/img/logo.svg"` por `src="/img/logo.png"` en `Components/Pages/Login.razor`.
+3. Cambiad `src="/img/logo.svg"` por `src="/img/logo.png"` en `Components/Layout/MainLayout.razor`.
