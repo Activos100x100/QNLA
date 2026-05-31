@@ -169,7 +169,7 @@ else
         else
         {
             // Fallback: flat list from GetPartidosAsync, group locally
-            var partidos = (await ApiService.GetPartidosAsync(_torneoSeleccionadoId)).OrderBy(x => x.fecha).ToList();
+            var partidos = (await ApiService.GetPartidosAsync(_torneoSeleccionadoId, soloPendientes: false)).OrderBy(x => x.fecha).ToList();
             foreach (var partido in partidos)
             {
                 if (pronosticos.TryGetValue(partido.id, out var pron))

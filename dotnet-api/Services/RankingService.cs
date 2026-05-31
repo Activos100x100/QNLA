@@ -39,11 +39,22 @@ public sealed class RankingService(IConnectionFactory connectionFactory) : IRank
 
         return await connectionFactory.WithConnection(async conn =>
         {
-            var sql = $"{RankedCte} SELECT * FROM qnla_v_ranking ORDER BY puntos_totales LIMIT @limit;";
+            var sql = $@"
+                {RankedCte}
+                SELECT posicion, torneo_id, participante_id, empleado_id, nombre_completo, alias, pronosticos_realizados, aciertos_exactos, aciertos_ganador, puntos_totales
+                FROM ranked
+                ORDER BY puntos_totales DESC, aciertos_exactos DESC
+                LIMIT @limit;";
 
             var top = (await conn.QueryAsync<RankingRowDto>(sql, new { torneo_id = torneoId, limit = validatedLimit })).ToList();
 
-            var currentSql = $"{RankedCte} SELECT * FROM qnla_v_ranking WHERE empleado_id = @empleado_id LIMIT 1;";
+            var currentSql = $@"
+                {RankedCte}
+                SELECT posicion, torneo_id, participante_id, empleado_id, nombre_completo, alias, pronosticos_realizados, aciertos_exactos, aciertos_ganador, puntos_totales
+                FROM ranked
+                WHERE empleado_id = @empleado_id
+                ORDER BY posicion
+                LIMIT 1;";
 
             var myPosition = await conn.QueryFirstOrDefaultAsync<RankingRowDto>(currentSql, new { torneo_id = torneoId, empleado_id = empleadoId });
 
