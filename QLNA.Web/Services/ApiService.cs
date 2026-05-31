@@ -90,11 +90,11 @@ public class ApiService
         }
     }
 
-    public async Task<IEnumerable<Partido>> GetPartidosAsync(int torneoId)
+    public async Task<IEnumerable<Partido>> GetPartidosAsync(int torneoId, bool soloPendientes = false)
     {
         try
         {
-            var req = await CreateRequestAsync(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/partidos");
+            var req = await CreateRequestAsync(HttpMethod.Get, $"/api/v1/torneos/{torneoId}/partidos?solo_pendientes={soloPendientes.ToString().ToLowerInvariant()}");
             using var res = await _client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
             {
@@ -243,6 +243,29 @@ public class ApiService
 
                     ranking.entradas = JsonSerializer.Deserialize<List<RankingEntryDto>>(arr.GetRawText(), _jsonOptions) ?? new();
                     break;
+                }
+            }
+
+            if (ranking.entradas.Count == 0 && ranking.top is { Count: > 0 })
+            {
+                ranking.entradas = ranking.top.ToList();
+            }
+
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("mis_puntos", out var misPuntosProp) &&
+                misPuntosProp.ValueKind is JsonValueKind.Number && misPuntosProp.TryGetInt32(out var misPuntos))
+            {
+                ranking.mis_puntos = misPuntos;
+            }
+
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("mi_posicion", out var miPosicionProp))
+            {
+                if (miPosicionProp.ValueKind is JsonValueKind.Number && miPosicionProp.TryGetInt32(out var miPosicion))
+                {
+                    ranking.mi_posicion = miPosicion;
+                }
+                else if (miPosicionProp.ValueKind is JsonValueKind.Object)
+                {
+                    ranking.mi_posicion_detalle = JsonSerializer.Deserialize<RankingEntryDto>(miPosicionProp.GetRawText(), _jsonOptions);
                 }
             }
 
