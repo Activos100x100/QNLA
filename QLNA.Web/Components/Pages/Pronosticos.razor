@@ -247,8 +247,8 @@ else
 
         if (ok)
         {
-            // Update counters
-            _completos = _grupos.SelectMany(g => g.partidos ?? new()).Count(p => p.pronostico?.id > 0);
+            // Increment counter directly since only one partido changed
+            _completos++;
             _porHacer = _totalPartidos - _completos;
         }
 
