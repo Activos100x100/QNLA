@@ -97,3 +97,404 @@ strong {
         font-size: 0.9rem;
     }
 }
+
+/* ── Torneo selector (shared) ────────────────────────────────── */
+.pron-selector-wrap {
+    margin-bottom: 1.25rem;
+}
+
+.pron-selector-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.pron-selector {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: #1a1a1a;
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23f4c430' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 18px;
+    padding-right: 40px;
+}
+
+.pron-selector:focus {
+    border-color: rgba(244,196,48,.45);
+    box-shadow: 0 0 0 3px rgba(244,196,48,.12);
+}
+
+/* ── Counters ────────────────────────────────────────────────── */
+.pron-counters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.counter-card {
+    background: var(--panel);
+    border: 1px solid rgba(244,196,48,.22);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.counter-num {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #f4c430;
+    line-height: 1;
+}
+
+.counter-label {
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+/* ── Progress bar ────────────────────────────────────────────── */
+.pron-progress-wrap {
+    height: 4px;
+    background: rgba(255,255,255,.08);
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.pron-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f4c430, #ffdd55);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+    min-width: 0;
+}
+
+/* ── Group banner ────────────────────────────────────────────── */
+.grupo-banner {
+    width: 100%;
+    background: linear-gradient(90deg, #f4c430, #ffdd55);
+    color: #0b0b0b;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 12px 20px;
+    border-radius: 10px;
+    margin: 24px 0 12px;
+}
+
+/* ── Match card v2 ───────────────────────────────────────────── */
+.match-card-v2 {
+    background: var(--panel);
+    border: 1px solid rgba(244,196,48,.35);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.match-date {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.match-teams {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.team-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 100px;
+}
+
+.team-name {
+    color: #f4c430;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.goal-input-sq {
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 10px;
+    outline: none;
+    box-sizing: border-box;
+    padding: 0;
+}
+
+.goal-input-sq:focus {
+    border-color: rgba(244,196,48,.45);
+    box-shadow: 0 0 0 3px rgba(244,196,48,.12);
+}
+
+/* Hide number input arrows */
+.goal-input-sq::-webkit-outer-spin-button,
+.goal-input-sq::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.goal-input-sq[type=number] {
+    -moz-appearance: textfield;
+}
+
+.vs-sep {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.match-save-row {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-save-match {
+    appearance: none;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 28px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f4c430, #ffdd55);
+    color: #0b0b0b;
+    min-width: 120px;
+    transition: opacity 0.15s;
+}
+
+.btn-save-match:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.btn-save-match.save-ok {
+    background: linear-gradient(135deg, #22c55e, #4ade80);
+    color: #0b0b0b;
+}
+
+.btn-save-match.save-err {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    color: #fff;
+}
+
+.pron-loading {
+    color: var(--muted);
+    padding: 2rem 0;
+}
+
+/* ── Ranking cards ───────────────────────────────────────────── */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rank-card {
+    background: var(--panel);
+    border: 1px solid rgba(244,196,48,.18);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.rank-card-me {
+    border: 2px solid rgba(244,196,48,.60);
+}
+
+.rank-card-me-sticky {
+    border: 2px solid rgba(244,196,48,.70);
+    background: rgba(244,196,48,.06);
+    margin-top: 6px;
+}
+
+.rank-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.rank-avatar-gold    { background: #f4c430; }
+.rank-avatar-silver  { background: #c0c0c0; }
+.rank-avatar-bronze  { background: #cd7f32; }
+.rank-avatar-default { background: #3a3a3a; }
+.rank-avatar-me      { background: #f4c430; }
+
+.rank-pos-num {
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: #0b0b0b;
+}
+
+.rank-avatar-default .rank-pos-num,
+.rank-avatar-bronze .rank-pos-num {
+    color: #fff;
+}
+
+.rank-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.rank-mi-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #f4c430;
+}
+
+.rank-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rank-stats {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.rank-pts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 2px;
+}
+
+.rank-pts-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #f4c430;
+    line-height: 1;
+}
+
+.rank-pts-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+/* ── Perfil card ─────────────────────────────────────────────── */
+.perfil-title {
+    color: #f4c430;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+}
+
+.perfil-card {
+    background: var(--panel);
+    border: 1px solid rgba(244,196,48,.40);
+    border-radius: 14px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.perfil-field {
+    margin-bottom: 18px;
+}
+
+.perfil-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #f4c430;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.perfil-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: #1a1a1a;
+    color: var(--text);
+    font-size: 1rem;
+    outline: none;
+}
+
+.perfil-input:focus {
+    border-color: rgba(244,196,48,.45);
+    box-shadow: 0 0 0 3px rgba(244,196,48,.12);
+}
+
+.perfil-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.perfil-btn-save {
+    flex: 1;
+    min-width: 160px;
+    border-radius: 999px;
+}
+
+.perfil-btn-discard {
+    flex: 1;
+    min-width: 160px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.20);
+}
+
+@media (max-width: 767px) {
+    .rank-name {
+        font-size: 0.82rem;
+    }
+
+    .rank-pts-num {
+        font-size: 1.3rem;
+    }
+
+    .match-teams {
+        gap: 10px;
+    }
+}

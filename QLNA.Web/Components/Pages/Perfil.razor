@@ -5,11 +5,11 @@
 
 <PageTitle>Perfil - QLNA</PageTitle>
 
-<h1>Perfil</h1>
+<h1 class="perfil-title">Perfil</h1>
 
-<div class="panel">
-    <label for="torneo">Torneo</label>
-    <select id="torneo" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
+<div class="pron-selector-wrap">
+    <label class="pron-selector-label">Selecciona Torneo:</label>
+    <select class="pron-selector" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
         @foreach (var torneo in _torneos)
         {
             <option value="@torneo.id">@torneo.nombre</option>
@@ -19,43 +19,32 @@
 
 @if (_perfil is null)
 {
-    <p>Cargando...</p>
+    <p class="muted">Cargando...</p>
 }
 else
 {
-    <div class="card profile-card">
-        <div class="field">
-            <label>Nombre</label>
-            <InputText class="input" @bind-Value="_editable.nombre" disabled="@(!_editMode)" />
+    <div class="perfil-card">
+        <div class="perfil-field">
+            <label class="perfil-label">Nombre</label>
+            <input class="perfil-input" type="text" @bind="_editable.nombre" placeholder="Tu nombre" />
         </div>
-        <div class="field">
-            <label>Email</label>
-            <InputText class="input" @bind-Value="_editable.email" disabled="@(!_editMode)" />
-        </div>
-        <div class="field">
-            <label>Teléfono</label>
-            <InputText class="input" @bind-Value="_editable.telefono" disabled="@(!_editMode)" />
-        </div>
-
-        <div class="stats">
-            <span>Puntos: <strong>@_perfil.puntos</strong></span>
-            <span>Posición: <strong>@_perfil.posicion</strong></span>
+        <div class="perfil-field">
+            <label class="perfil-label">Alias</label>
+            <input class="perfil-input" type="text" @bind="_editable.alias" placeholder="Tu alias o equipo" />
         </div>
 
         @if (!string.IsNullOrWhiteSpace(_message))
         {
-            <p class="message @(_messageOk ? "success" : "error")">@_message</p>
+            <div class="message @(_messageOk ? "success" : "error")">@_message</div>
         }
 
-        <div class="actions">
-            @if (!_editMode)
-            {
-                <button class="btn-secondary" @onclick="ActivarEdicion">Editar</button>
-            }
-            else
-            {
-                <button class="btn-primary" @onclick="Guardar">Guardar</button>
-            }
+        <div class="perfil-actions">
+            <button class="btn-primary perfil-btn-save" @onclick="Guardar" disabled="@_saving">
+                @(_saving ? "Guardando..." : "Guardar cambios")
+            </button>
+            <button class="btn-secondary perfil-btn-discard" @onclick="Descartar">
+                Descartar cambios
+            </button>
         </div>
     </div>
 }
@@ -65,7 +54,7 @@ else
     private int _torneoSeleccionadoId = 1;
     private PerfilDto? _perfil;
     private ActualizarPerfilRequest _editable = new();
-    private bool _editMode;
+    private bool _saving;
     private string? _message;
     private bool _messageOk;
 
@@ -83,20 +72,18 @@ else
         {
             _torneoSeleccionadoId = id;
             _message = null;
-            _editMode = false;
             await CargarPerfil();
         }
     }
 
-    private void ActivarEdicion()
-    {
-        _editMode = true;
-        _message = null;
-    }
-
     private async Task Guardar()
     {
+        _saving = true;
+        _message = null;
+
         var updated = await ApiService.ActualizarPerfilAsync(_torneoSeleccionadoId, _editable);
+        _saving = false;
+
         if (updated is null)
         {
             _messageOk = false;
@@ -108,25 +95,36 @@ else
         _editable = new ActualizarPerfilRequest
         {
             nombre = _perfil.nombre,
+            alias = _perfil.alias,
             email = _perfil.email,
             telefono = _perfil.telefono
         };
-        _editMode = false;
         _messageOk = true;
-        _message = "Perfil actualizado correctamente.";
+        _message = "Perfil actualizado ✓";
+    }
+
+    private void Descartar()
+    {
+        if (_perfil is null) return;
+        _editable = new ActualizarPerfilRequest
+        {
+            nombre = _perfil.nombre,
+            alias = _perfil.alias,
+            email = _perfil.email,
+            telefono = _perfil.telefono
+        };
+        _message = null;
     }
 
     private async Task CargarPerfil()
     {
         _perfil = await ApiService.GetPerfilAsync(_torneoSeleccionadoId);
-        if (_perfil is null)
-        {
-            return;
-        }
+        if (_perfil is null) return;
 
         _editable = new ActualizarPerfilRequest
         {
             nombre = _perfil.nombre,
+            alias = _perfil.alias,
             email = _perfil.email,
             telefono = _perfil.telefono
         };

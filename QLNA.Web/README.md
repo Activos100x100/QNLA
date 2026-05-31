@@ -37,10 +37,8 @@ Esta app comparte el mismo backend usado por QLNA Mobile.
 
 ## Cambiar el logo
 
-El proyecto usa por defecto `wwwroot/img/logo.svg` (vectorial).
-
-Cuando tengáis el PNG corporativo real:
+El proyecto usa por defecto `wwwroot/img/logo.svg` — un SVG vectorial de corona dorada con 5 puntas y 5 piedras, creado como placeholder fiel al diseño corporativo de Activos 100x100. Es totalmente funcional pero puede sustituirse por el PNG corporativo oficial:
 
 1. Añadid `wwwroot/img/logo.png`.
 2. Cambiad `src="/img/logo.svg"` por `src="/img/logo.png"` en `Components/Pages/Login.razor`.
-3. Cambiad `src="/img/logo.svg"` por `src="/img/logo.png"` en `Components/Layout/MainLayout.razor`.
+3. Cambiad `src="/img/logo.svg"` por `src="/img/logo.png"` en `Components/Layout/MainLayout.razor` (clase `brand-logo`, `height: 38px`).

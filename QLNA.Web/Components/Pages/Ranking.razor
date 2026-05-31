@@ -7,11 +7,9 @@
 
 <PageTitle>Ranking - QLNA</PageTitle>
 
-<h1>Ranking</h1>
-
-<div class="panel">
-    <label for="torneo">Torneo</label>
-    <select id="torneo" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
+<div class="pron-selector-wrap">
+    <label class="pron-selector-label">Selecciona Torneo:</label>
+    <select class="pron-selector" @onchange="OnTorneoChanged" value="@_torneoSeleccionadoId">
         @foreach (var torneo in _torneos)
         {
             <option value="@torneo.id">@torneo.nombre</option>
@@ -19,38 +17,52 @@
     </select>
 </div>
 
-@if (_ranking.mi_posicion.HasValue || _ranking.mis_puntos.HasValue)
-{
-    <div class="card summary-card">
-        Estás en la posición <strong>@(_ranking.mi_posicion ?? 0)</strong> con <strong>@(_ranking.mis_puntos ?? 0)</strong> puntos.
-    </div>
-}
+<div class="ranking-list">
+    @foreach (var item in _ranking.entradas)
+    {
+        var pos = item.posicion ?? 0;
+        var itemUserId = item.usuario_id ?? item.empleado_id;
+        var isMe = itemUserId == _currentUserId;
+        <div class="rank-card @(isMe ? "rank-card-me" : string.Empty)">
+            <div class="rank-avatar rank-avatar-@AvatarClass(pos)">
+                <span class="rank-pos-num">@pos</span>
+            </div>
+            <div class="rank-info">
+                <span class="rank-name">@(item.nombre ?? item.nombre_completo ?? item.alias ?? "—")</span>
+                <span class="rank-stats">@(item.total_pronosticos ?? 0) pronósticos · @(item.aciertos_exactos ?? 0) exactos · @(item.aciertos_ganador ?? 0) ganador</span>
+            </div>
+            <div class="rank-pts">
+                <span class="rank-pts-num">@(item.puntos ?? item.puntos_totales ?? 0)</span>
+                <span class="rank-pts-label">puntos</span>
+            </div>
+        </div>
+    }
 
-<table class="ranking-table">
-    <thead>
-        <tr>
-            <th>Posición</th>
-            <th>Nombre</th>
-            <th>Puntos</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in _ranking.entradas)
-        {
-            var itemUserId = item.usuario_id ?? item.empleado_id;
-            <tr class="@(itemUserId == _currentUserId ? "mine" : string.Empty)">
-                <td>@(item.posicion ?? 0)</td>
-                <td>@item.nombre</td>
-                <td>@(item.puntos ?? item.puntos_totales ?? 0)</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    @if (_ranking.mi_posicion.HasValue || _ranking.mis_puntos.HasValue)
+    {
+        @* Find "mi entrada" in the list — if already shown, still add a sticky "Mi posición" card at the end *@
+        <div class="rank-card rank-card-me rank-card-me-sticky">
+            <div class="rank-avatar rank-avatar-me">
+                <span class="rank-pos-num">Yo</span>
+            </div>
+            <div class="rank-info">
+                <span class="rank-mi-label">Mi posición</span>
+                <span class="rank-name">@(_miNombre ?? "—")</span>
+                <span class="rank-stats">Posición @(_ranking.mi_posicion ?? 0)</span>
+            </div>
+            <div class="rank-pts">
+                <span class="rank-pts-num">@(_ranking.mis_puntos ?? 0)</span>
+                <span class="rank-pts-label">puntos</span>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     private List<Torneo> _torneos = new();
     private int _torneoSeleccionadoId;
     private int _currentUserId;
+    private string? _miNombre;
     private RankingResponseDto _ranking = new();
 
     protected override async Task OnInitializedAsync()
@@ -60,6 +72,7 @@
         {
             _currentUserId = 0;
         }
+        _miNombre = state.User.Identity?.Name;
 
         _torneos = (await ApiService.GetTorneosAsync()).ToList();
         var activo = _torneos.FirstOrDefault(x => x.activo);
@@ -80,4 +93,12 @@
     {
         _ranking = await ApiService.GetRankingAsync(_torneoSeleccionadoId);
     }
+
+    private static string AvatarClass(int pos) => pos switch
+    {
+        1 => "gold",
+        2 => "silver",
+        3 => "bronze",
+        _ => "default"
+    };
 }

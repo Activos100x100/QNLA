@@ -39,8 +39,8 @@
 /tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/QLNA.Web.genruntimeconfig.cache
 /tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/ref/QLNA.Web.dll
 /tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/scopedcss/Components/Layout/AuthLayout.razor.rz.scp.css
-/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/eead69ce5s-{0}-7q05tqf67i-7q05tqf67i.gz
-/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/k5y6j76iwx-{0}-1ybe409kp8-1ybe409kp8.gz
-/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/ycvdmrilxb-{0}-idv2shksqr-idv2shksqr.gz
-/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/v64czgvawc-{0}-ms2cijse5u-ms2cijse5u.gz
-/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/f1v89dor4y-{0}-ms2cijse5u-ms2cijse5u.gz
+/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/eead69ce5s-{0}-mr114xkmhn-mr114xkmhn.gz
+/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/k5y6j76iwx-{0}-g8u2bzs2jc-g8u2bzs2jc.gz
+/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/ycvdmrilxb-{0}-5l5p1byv46-5l5p1byv46.gz
+/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/v64czgvawc-{0}-zt3l5d8lwn-zt3l5d8lwn.gz
+/tmp/workspace/Activos100x100/QNLA/QLNA.Web/obj/Debug/net10.0/compressed/f1v89dor4y-{0}-zt3l5d8lwn-zt3l5d8lwn.gz
