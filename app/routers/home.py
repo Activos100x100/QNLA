@@ -32,6 +32,7 @@ async def home_page(request: Request):
     rider_id = usuario.get("rider_id", "") if usuario else ""
     deuda_total = usuario.get("deuda_total", 0.0) if usuario else 0.0
     deuda_semanas = usuario.get("deuda_semanas", []) if usuario else []
+    mes_operativo = usuario.get("mes_operativo", "") if usuario else ""
 
     hora = datetime.now().hour
     if 6 <= hora < 14:
@@ -49,5 +50,6 @@ async def home_page(request: Request):
         rider_id=rider_id,
         deuda_total=deuda_total,
         deuda_semanas=deuda_semanas,
+        mes_operativo=mes_operativo,
         request=request,
     )

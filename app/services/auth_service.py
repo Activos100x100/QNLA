@@ -94,8 +94,8 @@ def autenticar_usuario(
 
 def _obtener_datos_empleado(db: Session, dni_nie: str) -> dict:
     """
-    Obtiene nombre del empleado y datos de rider + deuda.
-    Retorna dict con: nombre, es_rider, cod_activo, rider_id, deuda_total, deuda_semanas
+    Obtiene nombre del empleado y datos de rider + deuda + mes operativo.
+    Retorna dict con: nombre, es_rider, cod_activo, rider_id, deuda_total, deuda_semanas, mes_operativo
     """
     try:
         # Obtener nombre
@@ -114,6 +114,7 @@ def _obtener_datos_empleado(db: Session, dni_nie: str) -> dict:
             "rider_id": "",
             "deuda_total": 0.0,
             "deuda_semanas": [],
+            "mes_operativo": "",
         }
         
         if not row:
@@ -133,11 +134,30 @@ def _obtener_datos_empleado(db: Session, dni_nie: str) -> dict:
                 datos["cod_activo"] = rider.cod_activo or ""
                 datos["rider_id"] = rider.rider_id or ""
             
-            # Obtener deuda
+            # Obtener deuda y mes operativo
             repo_cashout = CashOutRepository(db)
             deuda_info = repo_cashout.obtener_deuda_rider_por_semana(empleado_id)
             datos["deuda_total"] = deuda_info.get("total", 0.0)
             datos["deuda_semanas"] = deuda_info.get("semanas", [])
+            
+            # Extraer mes operativo y formatearlo
+            mes_op = deuda_info.get("mes_operativo", {})
+            if mes_op and mes_op.get("id"):
+                nombre = mes_op.get("nombre", "")
+                mes = mes_op.get("mes", "")
+                anio = mes_op.get("anio", "")
+                
+                if nombre:
+                    datos["mes_operativo"] = f"{nombre} {mes}/{anio}"
+                else:
+                    # Fallback si nombre no está disponible
+                    nombres_mes_fallback = {
+                        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+                        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+                        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+                    }
+                    nombre_fallback = nombres_mes_fallback.get(mes, f"Mes {mes}")
+                    datos["mes_operativo"] = f"{nombre_fallback} {mes}/{anio}"
         
         return datos
     except Exception:
@@ -149,6 +169,7 @@ def _obtener_datos_empleado(db: Session, dni_nie: str) -> dict:
             "rider_id": "",
             "deuda_total": 0.0,
             "deuda_semanas": [],
+            "mes_operativo": "",
         }
 
 
@@ -164,6 +185,7 @@ def crear_token_sesion(usuario: UsuarioLogin, db: Session) -> str:
         "rider_id": datos["rider_id"],
         "deuda_total": datos["deuda_total"],
         "deuda_semanas": datos["deuda_semanas"],
+        "mes_operativo": datos["mes_operativo"],
     }
     return _serializer.dumps(payload)
 

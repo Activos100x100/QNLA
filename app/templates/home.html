@@ -523,8 +523,27 @@
 
                 <!-- Contenedor de deuda (solo para riders) -->
                 <div id="deudaContainer" style="display: none;">
+                    <!-- Header con datos del rider -->
+                    <div style="background: var(--black); border-radius: 14px; padding: 16px; margin-bottom: 16px; color: white;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; margin-bottom: 12px;">
+                            <div>
+                                <div style="color: rgba(255,255,255,0.6); margin-bottom: 3px;">Cod. Activo</div>
+                                <div style="font-weight: 700; font-size: 14px; color: var(--gold);" id="codActivoDisplay">-</div>
+                            </div>
+                            <div>
+                                <div style="color: rgba(255,255,255,0.6); margin-bottom: 3px;">Rider</div>
+                                <div style="font-weight: 700; font-size: 14px; color: var(--gold);" id="riderIdDisplay">-</div>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                            <div style="color: rgba(255,255,255,0.6); font-size: 11px; margin-bottom: 3px;">Mes Operativo</div>
+                            <div style="font-weight: 700; font-size: 13px;" id="mesOperativoDisplay">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de deuda -->
                     <div style="background: #f5f5f5; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
-                        <div style="font-size: 12px; color: #999; margin-bottom: 6px;">Mes: <span id="mesNombre"></span></div>
+                        <div style="font-size: 12px; color: #999; margin-bottom: 12px; font-weight: 600;">Deuda por Semana</div>
                         <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
                             <thead>
                                 <tr style="border-bottom: 1px solid #ddd;">
@@ -620,6 +639,7 @@
     const RIDER_ID = {{ rider_id | tojson }};
     const DEUDA_TOTAL = {{ deuda_total | tojson }};
     const DEUDA_SEMANAS = {{ deuda_semanas | tojson }};
+    const MES_OPERATIVO = {{ mes_operativo | tojson }};
 
     // ── Inyectar nombre y datos de rider ──
     const initial = NOMBRE ? NOMBRE.charAt(0).toUpperCase() : '?';
@@ -642,6 +662,11 @@
         document.getElementById('noRiderMsg').style.display = 'none';
         document.getElementById('cashoutCard').style.display = 'flex';
         
+        // Renderizar header de CASH OUT con datos del rider
+        document.getElementById('codActivoDisplay').textContent = COD_ACTIVO || '—';
+        document.getElementById('riderIdDisplay').textContent = RIDER_ID || '—';
+        document.getElementById('mesOperativoDisplay').textContent = MES_OPERATIVO || '—';
+        
         // Renderizar tabla de deuda por semana
         const deudaRows = document.getElementById('deudaRows');
         deudaRows.innerHTML = '';
@@ -658,12 +683,6 @@
         
         // Mostrar total
         document.getElementById('deudaTotal').textContent = `$${DEUDA_TOTAL.toFixed(2)}`;
-        
-        // Llenar mes (extraer de DEUDA_SEMANAS[0] si existe)
-        const mesNombre = DEUDA_SEMANAS.length > 0 ? 
-            `${DEUDA_SEMANAS[0].iso_year}-W${String(DEUDA_SEMANAS[0].iso_week).padStart(2, '0')}` 
-            : 'N/A';
-        document.getElementById('mesNombre').textContent = mesNombre;
         
         // Click en CASH OUT
         const cashoutCard = document.getElementById('cashoutCard');
