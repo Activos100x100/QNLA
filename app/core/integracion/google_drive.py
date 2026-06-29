@@ -14,7 +14,7 @@ import json
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 # Shared drive id used by the app (keep if you have a specific shared drive)
-SHARED_DRIVE_ID = "0APwyMrIG-3zWUk9PVA"
+SHARED_DRIVE_ID = "0AGS54Yl9mcUnUk9PVA"
 
 # cache para reducir llamadas a API
 FOLDER_CACHE = {}
@@ -476,5 +476,82 @@ def load_user_credentials(email: str):
             logger.exception('Could not refresh token for %s', email)
         except Exception:
             pass
+
+
+# ========== FUNCIONES DE UPLOAD ==========
+
+def subir_archivo_a_drive(drive, contenido_bytes: bytes, nombre_archivo: str, parent_folder_id: str, mime_type: str = "application/pdf") -> dict:
+    """
+    Sube un archivo a Google Drive en una carpeta específica.
+    
+    Args:
+        drive: Google Drive service object
+        contenido_bytes: Contenido del archivo en bytes
+        nombre_archivo: Nombre del archivo
+        parent_folder_id: ID de la carpeta padre en Drive
+        mime_type: Tipo MIME del archivo
+        
+    Returns:
+        dict: {"id": file_id, "name": file_name, "webViewLink": url}
+    """
+    try:
+        from googleapiclient.http import MediaInMemoryUpload
+        
+        # Preparar metadata
+        file_metadata = {
+            'name': nombre_archivo,
+            'parents': [parent_folder_id]
+        }
+        
+        # Crear stream de bytes
+        media = MediaInMemoryUpload(contenido_bytes, mimetype=mime_type, resumable=True)
+        
+        # Subir archivo
+        file = drive.files().create(
+            body=file_metadata,
+            media_body=media,
+            supportsAllDrives=True,
+            fields='id, name, webViewLink, mimeType, createdTime'
+        ).execute()
+        
+        logger.info(f"✅ Archivo '{nombre_archivo}' subido a Drive: {file.get('id')}")
+        return file
+        
+    except Exception as e:
+        logger.error(f"❌ Error subiendo archivo '{nombre_archivo}' a Drive: {e}")
+        raise
+
+
+def crear_carpeta_por_fecha(drive, shared_drive_id: str, year: str, month: str) -> str:
+    """
+    Crea estructura YEAR/MONTH en la raíz del Shared Drive y retorna el ID de MONTH.
+    
+    Args:
+        drive: Google Drive service object
+        shared_drive_id: ID del Shared Drive
+        year: Año (ej: "2026")
+        month: Mes (ej: "06" o "JUNIO")
+        
+    Returns:
+        str: ID de la carpeta de mes
+    """
+    cache = {}
+
+    # Buscar/crear carpeta de AÑO
+    year_id = _find_folder(drive, year, shared_drive_id, shared_drive_id, cache=cache)
+    if not year_id:
+        year_folder = crear_carpeta(drive, year, shared_drive_id)
+        year_id = year_folder["id"]
+        logger.info(f"📂 Carpeta {year} creada: {year_id}")
+    
+    # Buscar/crear carpeta de MES
+    month_id = _find_folder(drive, month, year_id, shared_drive_id, cache=cache)
+    if not month_id:
+        month_folder = crear_carpeta(drive, month, year_id)
+        month_id = month_folder["id"]
+        logger.info(f"📂 Carpeta {month} creada: {month_id}")
+
+    logger.info(f"✅ Estructura {year}/{month} lista: {month_id}")
+    return month_id
 
     return creds

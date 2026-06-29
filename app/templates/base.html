@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FTRA - Sistema de procesamiento de facturas con IA">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FTRA">
+    
+    <title>{% block title %}FTRA - Procesamiento de Facturas{% endblock %}</title>
+    
+    <link rel="manifest" href="{{ url_for('static', path='manifest.json') }}">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%232563eb' width='100' height='100'/><text x='50' y='65' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>F</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%232563eb' width='180' height='180'/><text x='90' y='130' font-size='120' font-weight='bold' fill='white' text-anchor='middle'>F</text></svg>">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light" data-bs-theme="light">
+    <!-- Wrapper -->
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar bg-dark text-white">
+            <!-- Logo -->
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center">
+                    <div class="logo-icon me-2">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">FTRA</h5>
+                        <small class="text-secondary">v1.0</small>
+                    </div>
+                </div>
+                <button class="btn-close btn-close-white d-md-none ms-auto" id="sidebarToggle"></button>
+            </div>
+
+            <!-- Menu Principal -->
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/cargar' %}active{% endif %}" href="/cargar">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <span>Cargar Facturas</span>
+                        <span class="badge bg-primary rounded-pill ms-auto">Nuevo</span>
+                    </a>
+                </li>
+
+                <!-- Facturas Submenu -->
+                <li class="nav-item">
+                    <a class="nav-link collapsed" href="#facturasMenu" data-bs-toggle="collapse">
+                        <i class="bi bi-file-text"></i>
+                        <span>Facturas</span>
+                        <i class="bi bi-chevron-down ms-auto"></i>
+                    </a>
+                    <div class="collapse {% if 'facturas' in request.path %}show{% endif %}" id="facturasMenu">
+                        <ul class="nav flex-column ms-3">
+                            <li><a class="nav-link" href="/facturas">Todas</a></li>
+                            <li><a class="nav-link" href="/facturas?estado=pendiente">Pendientes</a></li>
+                            <li><a class="nav-link" href="/facturas?estado=procesada">Procesadas</a></li>
+                            <li><a class="nav-link" href="/facturas?estado=error">Con errores</a></li>
+                            <li><a class="nav-link" href="/facturas?estado=archivada">Archivadas</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/proveedores">
+                        <i class="bi bi-building"></i>
+                        <span>Proveedores</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/clientes">
+                        <i class="bi bi-people"></i>
+                        <span>Clientes</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/estadisticas">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Estadísticas</span>
+                    </a>
+                </li>
+
+                <li class="nav-divider"></li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/configuracion">
+                        <i class="bi bi-gear"></i>
+                        <span>Configuración</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/logs">
+                        <i class="bi bi-terminal"></i>
+                        <span>Logs del sistema</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- User Section -->
+            <div class="sidebar-footer mt-auto">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="ms-2 flex-grow-1">
+                        <small class="d-block text-truncate">Usuario</small>
+                        <small class="text-secondary">Admin</small>
+                    </div>
+                    <button class="btn btn-sm btn-ghost-secondary" id="themeToggle" title="Cambiar tema">
+                        <i class="bi bi-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="topbar">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-ghost-secondary d-md-none me-2" id="sidebarToggleBtn">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    
+                    <div class="search-box flex-grow-1">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" placeholder="Buscar facturas, proveedores...">
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-ghost-secondary" id="notificationBtn">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge bg-danger rounded-pill notification-badge">3</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <div class="page-wrapper">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Center Modal -->
+    <div class="modal fade" id="notificationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Notificaciones</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="notification-item">
+                        <div class="notification-icon bg-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Factura procesada</h6>
+                            <small class="text-muted">Factura #INV-001 de Leroy Merlin</small>
+                            <div class="text-muted" style="font-size: 0.75rem;">hace 5 minutos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript Personalizado -->
+    <script src="{{ url_for('static', path='js/main.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

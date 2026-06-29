@@ -7,7 +7,7 @@ def norm(value):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     return text.replace(' ', '_').replace('-', '_')
 
-CSV = '/Users/elizabethjimenez/Downloads/04 QNLA MES DE ABRIL 2026 - Santander.csv'
+CSV = '/Users/elizabethjimenez/Downloads/04 FTRA MES DE ABRIL 2026 - Santander.csv'
 with open(CSV, 'rb') as f:
     raw = f.read()
 for enc in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:

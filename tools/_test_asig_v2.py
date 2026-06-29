@@ -1,6 +1,6 @@
 import requests, json, sys
 
-CSV_PATH = '/Users/elizabethjimenez/Downloads/04 QNLA MES DE ABRIL 2026 - Santander.csv'
+CSV_PATH = '/Users/elizabethjimenez/Downloads/04 FTRA MES DE ABRIL 2026 - Santander.csv'
 CIUDAD_ID = 6  # Santander
 
 with open(CSV_PATH, 'rb') as f:

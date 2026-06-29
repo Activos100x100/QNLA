@@ -1,6 +1,6 @@
 import sys, os, requests, json
 
-CSV = '/Users/elizabethjimenez/Downloads/04 QNLA MES DE ABRIL 2026 - Santander.csv'
+CSV = '/Users/elizabethjimenez/Downloads/04 FTRA MES DE ABRIL 2026 - Santander.csv'
 BASE = 'http://127.0.0.1:8000'
 
 # 1. Obtener ciudad_id de Santander

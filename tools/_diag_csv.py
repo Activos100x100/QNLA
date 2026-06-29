@@ -3,7 +3,7 @@ import sys, csv, io, unicodedata
 sys.path.insert(0, '/Users/elizabethjimenez/NachitoRRHH')
 from app.database import get_connection
 
-CSV_PATH = '/Users/elizabethjimenez/Downloads/04 QNLA MES DE ABRIL 2026 - Santander.csv'
+CSV_PATH = '/Users/elizabethjimenez/Downloads/04 FTRA MES DE ABRIL 2026 - Santander.csv'
 
 def _normalize_csv_header(value):
     text = str(value or '').strip().lower()

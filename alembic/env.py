@@ -2,13 +2,29 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 import os
+import sys
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 from dotenv import load_dotenv
 
-from app.qnla.database import Base
-from app.qnla import models as qnla_models  # noqa: F401
+# Intentar cargar desde app.database (factura processing) primero
+try:
+    from app.database import Base
+except ImportError:
+    # Fallback a app.ftra.database (legacy quiniela)
+    from app.ftra.database import Base
+
+# Importar modelos para que se registren en metadata
+try:
+    from app import models as app_models  # noqa: F401
+except ImportError:
+    pass
+
+try:
+    from app.ftra import models as ftra_models  # noqa: F401
+except ImportError:
+    pass
 
 config = context.config
 

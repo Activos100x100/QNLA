@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Facturas - FTRA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            margin: -20px -20px 30px -20px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #eee;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .id-cell {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .estado-pendiente {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .estado-revisada {
+            background: #a29bfe;
+            color: #2d3436;
+        }
+
+        .estado-aprobada {
+            background: #81ecec;
+            color: #00b894;
+        }
+
+        .estado-pagada {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-edit {
+            background: #f0ad4e;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #ec971f;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .date-cell {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+        }
+
+        .storage-drive {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .storage-local {
+            background: #e2e8f0;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .archivo-cell {
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 600px;
+            }
+
+            th, td {
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .actions-cell {
+                flex-direction: column;
+            }
+
+            .btn-sm {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Dashboard Facturas</h1>
+            <p class="header-subtitle">Gestión de facturas españolas</p>
+            <div class="actions">
+                <a href="/subir-factura" class="btn btn-primary">📱 Subir Nueva Factura</a>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-facturas">0</div>
+                <div class="stat-label">Total Facturas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendientes-count">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="revisadas-count">0</div>
+                <div class="stat-label">Revisadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="aprobadas-count">0</div>
+                <div class="stat-label">Aprobadas</div>
+            </div>
+        </div>
+
+        <div id="error-container"></div>
+
+        <div class="table-wrapper" id="table-container">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px;">Cargando facturas...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>FTRA • Sistema de Gestión de Facturas • v1.0.0</p>
+    </div>
+
+    <script>
+        async function loadFacturas() {
+            try {
+                const response = await fetch('/api/facturas/dashboard');
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+                const data = await response.json();
+                renderDashboard(data);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function renderDashboard(data) {
+            const { total, facturas } = data;
+            
+            // Actualizar stats
+            document.getElementById('total-facturas').textContent = total;
+            const pendientes = facturas.filter(f => f.estado === 'pendiente').length;
+            const revisadas = facturas.filter(f => f.estado === 'revisada').length;
+            const aprobadas = facturas.filter(f => f.estado === 'aprobada').length;
+            
+            document.getElementById('pendientes-count').textContent = pendientes;
+            document.getElementById('revisadas-count').textContent = revisadas;
+            document.getElementById('aprobadas-count').textContent = aprobadas;
+
+            if (facturas.length === 0) {
+                renderEmptyState();
+            } else {
+                renderTable(facturas);
+            }
+        }
+
+        function renderEmptyState() {
+            document.getElementById('table-container').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📄</div>
+                    <div class="empty-title">No hay facturas aún</div>
+                    <div class="empty-desc">Comienza subiendo tu primera factura</div>
+                    <a href="/subir-factura" class="btn btn-primary" style="display: inline-block;">
+                        📱 Subir Factura
+                    </a>
+                </div>
+            `;
+        }
+
+        function renderTable(facturas) {
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Archivo</th>
+                            <th>Número</th>
+                            <th>Fecha</th>
+                            <th>Proveedor</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Storage</th>
+                            <th>Drive</th>
+                            <th>Empleado</th>
+                            <th>Subida</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${facturas.map(f => `
+                            <tr>
+                                <td class="id-cell">#${f.id}</td>
+                                <td class="archivo-cell" title="${f.archivo || '—'}">${f.archivo || '—'}</td>
+                                <td>${f.numero}</td>
+                                <td class="date-cell">${f.fecha}</td>
+                                <td>${f.proveedor}</td>
+                                <td>€ ${f.total.toFixed(2)}</td>
+                                <td>
+                                    <span class="estado-badge estado-${f.estado}">
+                                        ${f.estado}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="estado-badge ${f.storage === 'drive' ? 'storage-drive' : 'storage-local'}">
+                                        ${f.storage || '—'}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${f.ruta_drive ? `<a href="${f.ruta_drive}" target="_blank" rel="noopener">Abrir</a>` : '—'}
+                                </td>
+                                <td>${f.empleado}</td>
+                                <td class="date-cell">${formatDate(f.fecha_subida)}</td>
+                                <td class="actions-cell">
+                                    <button class="btn-sm btn-view" onclick="verFactura(${f.id})">
+                                        Ver
+                                    </button>
+                                    <button class="btn-sm btn-edit" onclick="editarFactura(${f.id})">
+                                        Editar
+                                    </button>
+                                    <button class="btn-sm btn-edit" onclick="comentarFactura(${f.id})">
+                                        Comentar
+                                    </button>
+                                    <button class="btn-sm btn-edit" onclick="cambiarEstadoFactura(${f.id}, '${f.estado}')">
+                                        Estado
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('table-container').innerHTML = html;
+        }
+
+        function formatDate(isoString) {
+            if (!isoString || isoString === '—') return '—';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('es-ES');
+        }
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error-message">❌ Error: ${message}</div>`;
+            document.getElementById('table-container').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div class="empty-title">Error al cargar</div>
+                    <div class="empty-desc">${message}</div>
+                    <button onclick="location.reload()" class="btn btn-primary" style="display: inline-block;">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+
+        async function verFactura(id) {
+            try {
+                const resp = await fetch(`/api/facturas/${id}`);
+                if (!resp.ok) throw new Error(`No se pudo abrir (${resp.status})`);
+                const f = await resp.json();
+                alert(
+`Factura #${f.id}\n` +
+`Número: ${f.numero_factura || '—'}\n` +
+`Fecha: ${f.fecha_factura || '—'}\n` +
+`Proveedor: ${f.proveedor || '—'}\n` +
+`Total: ${f.total ?? '—'}\n` +
+`Estado: ${f.estado || '—'}\n` +
+`Archivo: ${f.archivo_nombre || '—'}\n` +
+`Storage: ${f.storage || '—'}\n` +
+`Drive file id: ${f.drive_file_id || '—'}\n` +
+`Ruta: ${f.ruta_drive || '—'}\n` +
+`MIME: ${f.mime_type || '—'}\n` +
+`Tamaño: ${f.tamano_archivo ?? '—'}\n` +
+`SHA256: ${f.hash_sha256 || '—'}`
+                );
+            } catch (e) {
+                alert('Error al abrir factura: ' + e.message);
+            }
+        }
+
+        async function editarFactura(id) {
+            try {
+                const resp = await fetch(`/api/facturas/${id}`);
+                if (!resp.ok) throw new Error(`No se pudo cargar (${resp.status})`);
+                const f = await resp.json();
+
+                const numero = prompt('Número de factura:', f.numero_factura || '');
+                if (numero === null) return;
+
+                const totalRaw = prompt('Total (€):', f.total ?? '');
+                if (totalRaw === null) return;
+
+                const body = {
+                    numero_factura: String(numero || '').trim() || null,
+                    total: totalRaw === '' ? null : Number(totalRaw),
+                };
+
+                const updateResp = await fetch(`/api/facturas/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await updateResp.json().catch(() => ({}));
+                if (!updateResp.ok) throw new Error(data.detail || `Error ${updateResp.status}`);
+
+                alert('Factura actualizada correctamente');
+                loadFacturas();
+            } catch (e) {
+                alert('Error al editar factura: ' + e.message);
+            }
+        }
+
+        async function comentarFactura(id) {
+            const texto = prompt('Escribe el comentario para la factura #' + id + ':');
+            if (!texto || !texto.trim()) return;
+            try {
+                const resp = await fetch('/api/comentarios/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        entity_type: 'factura',
+                        entity_id: id,
+                        texto: texto.trim(),
+                        tipo: 'revision',
+                    }),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) throw new Error(data.detail || `Error ${resp.status}`);
+                alert('Comentario añadido');
+            } catch (e) {
+                alert('Error al añadir comentario: ' + e.message);
+            }
+        }
+
+        async function cambiarEstadoFactura(id, estadoActual) {
+            const nuevo = prompt(
+                `Estado actual: ${estadoActual || 'pendiente'}\nNuevo estado (pendiente|revisada|aprobada|pagada):`,
+                estadoActual || 'pendiente'
+            );
+            if (!nuevo) return;
+            try {
+                const estado = nuevo.trim().toLowerCase();
+                const resp = await fetch(`/api/facturas/${id}/estado/${estado}`, {
+                    method: 'POST'
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) throw new Error(data.detail || `Error ${resp.status}`);
+                alert('Estado actualizado a: ' + estado);
+                loadFacturas();
+            } catch (e) {
+                alert('Error al cambiar estado: ' + e.message);
+            }
+        }
+
+        // Cargar datos al inicializar
+        loadFacturas();
+
+        // Recargar cada 30 segundos
+        setInterval(loadFacturas, 30000);
+    </script>
+</body>
+</html>

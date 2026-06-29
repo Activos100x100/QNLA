@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#111111">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>FTRA - Subir Factura</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --gold: #d4af37;
+            --black: #111111;
+            --bg: #f4f4f4;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: #222;
+        }
+
+        /* ── APP SHELL ── */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            height: 100vh;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--black);
+            padding: 14px 18px;
+            padding-top: max(14px, env(safe-area-inset-top));
+            z-index: 50;
+        }
+
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px;
+            padding: 5px 12px 5px 8px;
+            cursor: pointer;
+        }
+
+        .user-pill span {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 600;
+            max-width: 90px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--black);
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-menu {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .btn-menu span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        /* ── PAGE LABEL ── */
+        .page-label {
+            flex-shrink: 0;
+            background: var(--black);
+            padding: 0 18px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-label .pl-icon {
+            font-size: 20px;
+        }
+
+        .page-label .pl-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .page-label .pl-back {
+            margin-left: auto;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+        }
+
+        /* ── SCROLL CONTENT ── */
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            position: relative;
+        }
+
+        .background-logo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px;
+            height: 380px;
+            background: url('/static/img/logo.png') no-repeat center;
+            background-size: contain;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px 18px 100px;
+        }
+
+        /* ── UPLOAD CARD ── */
+        .upload-card {
+            background: white;
+            border-radius: 20px;
+            padding: 36px 26px;
+            box-shadow: 0 6px 18px rgba(13,23,34,0.10);
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .upload-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: #111;
+            border: 2px solid var(--gold);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+        h1 { font-size: 26px; color: #333; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #999; margin-bottom: 32px; }
+
+        #fileInput { display: none; }
+
+        .dropzone {
+            border: 2px dashed var(--gold);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 16px;
+            color: #4b4b4b;
+            background: #ffffff;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .dropzone.dragover {
+            border-color: #b88a1d;
+            background: #fff9e8;
+            transform: scale(1.01);
+        }
+
+        .btn-upload {
+            width: 100%;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.3);
+            font-family: inherit;
+        }
+
+        .btn-upload:active { transform: scale(0.98); }
+        .btn-upload:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .progress-container { display: none; margin-top: 24px; }
+
+        .progress-bar { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #111 0%, var(--gold) 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text { font-size: 12px; color: #999; margin-top: 8px; }
+
+        .message { margin-top: 24px; padding: 18px; border-radius: 15px; display: none; font-size: 14px; }
+        .message.success { background: #fff9e8; color: #2a220f; border-left: 4px solid var(--gold); display: block; }
+        .message.error   { background: #fff1f1; color: #5f1b1b; border-left: 4px solid #aa2a2a; display: block; }
+        .icon-success { font-size: 36px; margin-bottom: 8px; }
+
+        .ocr-box { margin-top: 16px; border: 1px solid #e5e7eb; background: #fafafa; border-radius: 12px; padding: 12px; text-align: left; display: none !important; }
+        .ocr-title { font-weight: 700; color: #374151; margin-bottom: 8px; font-size: 14px; }
+        .ocr-content { white-space: pre-wrap; max-height: 200px; overflow: auto; font-size: 12px; color: #111827; line-height: 1.35; }
+
+        .fields-box { margin-top: 12px; border: 1px solid var(--gold); border-radius: 12px; background: #fff; padding: 12px; text-align: left; display: none; }
+        .field-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 4px 0; border-bottom: 1px dashed #ececec; }
+        .field-row:last-child { border-bottom: none; }
+        .field-label { color: #4e4221; font-weight: 600; }
+        .field-value { color: #111827; font-weight: 600; text-align: right; }
+
+        /* ── TAB BAR ── */
+        .tabbar {
+            flex-shrink: 0;
+            display: flex;
+            background: white;
+            border-top: 1px solid #ebebeb;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 10px 0;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            color: #bbb;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .tab-item .tab-icon { font-size: 22px; }
+        .tab-item.active { color: var(--black); }
+
+        /* ── DRAWER ── */
+        .drawer-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+        .drawer {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: 78vw; max-width: 300px;
+            background: var(--black);
+            z-index: 110;
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column;
+            padding: max(20px, env(safe-area-inset-top)) 0 max(20px, env(safe-area-inset-bottom));
+        }
+        .drawer.open { transform: translateX(0); }
+
+        .drawer-head { padding: 20px 22px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .drawer-avatar { width: 54px; height: 54px; border-radius: 50%; background: var(--gold); color: var(--black); font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .drawer-hello { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 2px; }
+        .drawer-name { font-size: 18px; font-weight: 800; color: white; }
+
+        .drawer-nav { flex: 1; padding: 14px 0; overflow-y: auto; }
+
+        .drawer-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 15px 22px; cursor: pointer; border: none;
+            background: none; width: 100%; text-align: left;
+            color: rgba(255,255,255,0.8); font-size: 15px; font-weight: 600;
+            font-family: inherit; transition: background 0.2s; text-decoration: none;
+        }
+        .drawer-item:hover { background: rgba(255,255,255,0.07); color: white; }
+        .drawer-item.active { border-left: 3px solid var(--gold); padding-left: 19px; color: var(--gold); }
+        .drawer-item .di-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+
+        .drawer-footer { padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+        .drawer-item.logout { color: #ff6b6b; }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <button class="btn-menu" id="btnMenu" aria-label="Menú">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-logo">
+            <img src="/static/img/logo.png" alt="FTRA">
+            <span class="topbar-title">FTRA</span>
+        </div>
+        <div class="user-pill" id="btnMenuAlt">
+            <div class="user-avatar" id="userInitial">?</div>
+            <span id="userName"></span>
+        </div>
+    </header>
+
+    <!-- PAGE LABEL -->
+    <div class="page-label">
+        <span class="pl-icon">📤</span>
+        <span class="pl-text">Subir Factura</span>
+        <a href="/home" class="pl-back">← Inicio</a>
+    </div>
+
+    <!-- SCROLL CONTENT -->
+    <div class="scroll-content">
+        <div class="background-logo"></div>
+        <div class="inner">
+            <div class="upload-card">
+                <div class="upload-logo">
+                    <img src="/static/img/logo.png" alt="Logo">
+                </div>
+                <h1>Subir Factura</h1>
+                <p class="subtitle">PDF o fotografía · También puedes arrastrar y soltar</p>
+
+                <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.tiff">
+
+                <div class="dropzone" id="dropzone" onclick="abrirGaleria()">
+                    Arrastra tu archivo aquí o haz clic para seleccionarlo
+                </div>
+
+                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <button class="btn-upload" id="btnCamera" onclick="abrirCamara()" style="flex:1;min-width:140px;">
+                        📷 Tomar foto
+                    </button>
+                    <button class="btn-upload" id="btnUpload" onclick="abrirGaleria()" style="flex:1;min-width:140px;">
+                        📎 Adjuntar archivo
+                    </button>
+                </div>
+
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                    <div class="progress-text" id="progressText">Subiendo...</div>
+                </div>
+
+                <div class="message" id="message"></div>
+
+                <div class="ocr-box" id="ocrBox">
+                    <div class="ocr-title">Texto detectado (preview OCR)</div>
+                    <div class="ocr-content" id="ocrContent"></div>
+                </div>
+
+                <div class="fields-box" id="fieldsBox">
+                    <div class="ocr-title">Campos extraídos</div>
+                    <div id="fieldsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <nav class="tabbar">
+        <a href="/home" class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span>Inicio</span>
+        </a>
+        <a href="/subir-factura" class="tab-item active">
+            <span class="tab-icon">📤</span>
+            <span>Facturas</span>
+        </a>
+        <a href="/home#cashout" class="tab-item">
+            <span class="tab-icon">💰</span>
+            <span>Cash Out</span>
+        </a>
+    </nav>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<nav class="drawer" id="drawer">
+    <div class="drawer-head">
+        <div class="drawer-avatar" id="drawerInitial">?</div>
+        <div class="drawer-hello" id="drawerHello"></div>
+        <div class="drawer-name" id="drawerName"></div>
+    </div>
+    <div class="drawer-nav">
+        <a href="/home" class="drawer-item">
+            <span class="di-icon">🏠</span> Inicio
+        </a>
+        <a href="/home" class="drawer-item">
+            <span class="di-icon">🧾</span> Gestión de Facturas
+        </a>
+        <a href="/subir-factura" class="drawer-item active">
+            <span class="di-icon">📤</span> Subir factura
+        </a>
+        <a href="/home" class="drawer-item">
+            <span class="di-icon">💰</span> CASH OUT
+        </a>
+    </div>
+    <div class="drawer-footer">
+        <a href="/logout" class="drawer-item logout">
+            <span class="di-icon">🚪</span> Salir
+        </a>
+    </div>
+</nav>
+
+<script>
+    // ── Datos del servidor ──
+    const NOMBRE = {{ nombre | tojson }};
+    const SALUDO = {{ saludo | tojson }};
+
+    const initial = NOMBRE ? NOMBRE.charAt(0).toUpperCase() : '?';
+    document.getElementById('userInitial').textContent  = initial;
+    document.getElementById('userName').textContent     = NOMBRE.split(' ')[0];
+    document.getElementById('drawerInitial').textContent = initial;
+    document.getElementById('drawerHello').textContent   = SALUDO;
+    document.getElementById('drawerName').textContent    = NOMBRE;
+
+    // ── Drawer ──
+    function openDrawer() {
+        document.getElementById('drawer').classList.add('open');
+        document.getElementById('drawerOverlay').classList.add('open');
+    }
+    function closeDrawer() {
+        document.getElementById('drawer').classList.remove('open');
+        document.getElementById('drawerOverlay').classList.remove('open');
+    }
+    document.getElementById('btnMenu').addEventListener('click', openDrawer);
+    document.getElementById('btnMenuAlt').addEventListener('click', openDrawer);
+
+    // ── Upload logic ──
+    const btnUpload = document.getElementById('btnUpload');
+    const btnCamera = document.getElementById('btnCamera');
+    const fileInput = document.getElementById('fileInput');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const message = document.getElementById('message');
+    const dropzone = document.getElementById('dropzone');
+    const ocrBox = document.getElementById('ocrBox');
+    const ocrContent = document.getElementById('ocrContent');
+    const SHOW_OCR_PREVIEW = false;
+    const fieldsBox = document.getElementById('fieldsBox');
+    const fieldsContent = document.getElementById('fieldsContent');
+
+    function formatNumberEs(value) {
+        if (value === null || value === undefined || value === '') return '—';
+        const n = Number(value);
+        if (Number.isNaN(n)) return String(value);
+        return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function renderCampos(campos) {
+        if (!campos || typeof campos !== 'object') { fieldsBox.style.display = 'none'; fieldsContent.innerHTML = ''; return; }
+        const rows = [
+            ['Factura Nº', campos.factura_numero || '—'],
+            ['Fecha emisión', campos.fecha_emision || '—'],
+            ['NIF cliente', campos.nif_cliente || '—'],
+            ['Cliente', campos.cliente || '—'],
+            ['Base imponible', campos.base_imponible != null ? `${formatNumberEs(campos.base_imponible)} €` : '—'],
+            ['IVA', campos.iva != null ? `${formatNumberEs(campos.iva)} €` : '—'],
+            ['Total', campos.total != null ? `${formatNumberEs(campos.total)} €` : '—'],
+        ];
+        fieldsContent.innerHTML = rows.map(([label, value]) =>
+            `<div class="field-row"><span class="field-label">${label}</span><span class="field-value">${value}</span></div>`
+        ).join('');
+        fieldsBox.style.display = 'block';
+    }
+
+    function abrirGaleria() { fileInput.removeAttribute('capture'); fileInput.click(); }
+    function abrirCamara()  { fileInput.setAttribute('capture', 'environment'); fileInput.click(); }
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        subirFactura(file);
+    });
+
+    ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', e => { const file = e.dataTransfer?.files?.[0]; if (file) subirFactura(file); });
+
+    async function subirFactura(file) {
+        btnUpload.disabled = true;
+        if (btnCamera) btnCamera.disabled = true;
+        progressContainer.style.display = 'block';
+        message.style.display = 'none';
+        ocrBox.style.display = 'none';
+        ocrContent.textContent = '';
+        fieldsBox.style.display = 'none';
+        fieldsContent.innerHTML = '';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress = Math.min(progress + Math.random() * 30, 90);
+                progressFill.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+            }, 200);
+
+            const response = await fetch('/api/facturas/upload', { method: 'POST', body: formData });
+            clearInterval(interval);
+            progressFill.style.width = '100%';
+            progressText.textContent = '100%';
+
+            if (response.ok) {
+                const data = await response.json();
+                setTimeout(() => {
+                    message.className = 'message success';
+                    message.innerHTML = `
+                        <div class="icon-success">✅</div>
+                        <strong>¡Factura subida correctamente!</strong><br>
+                        <small>ID: #${data.factura_id}</small><br>
+                        <small>OCR: ${data.ocr_exitoso ? 'procesado' : 'no disponible'}</small>
+                    `;
+                    message.style.display = 'block';
+                    if (SHOW_OCR_PREVIEW) {
+                        if (data.texto_ocr_preview) { ocrContent.textContent = data.texto_ocr_preview; ocrBox.style.display = 'block'; }
+                        else if (data.ocr_error)    { ocrContent.textContent = `No se pudo extraer texto OCR. Motivo: ${data.ocr_error}`; ocrBox.style.display = 'block'; }
+                        else { ocrContent.textContent = 'No se detectó texto legible.'; ocrBox.style.display = 'block'; }
+                    }
+                    renderCampos(data.campos_extraidos);
+                    progressContainer.style.display = 'none';
+                    btnUpload.disabled = false;
+                    if (btnCamera) btnCamera.disabled = false;
+                    fileInput.value = '';
+                }, 500);
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Error en respuesta del servidor');
+            }
+        } catch (err) {
+            message.className = 'message error';
+            message.innerHTML = `<strong>Error al subir</strong><br><small>${err.message}</small>`;
+            message.style.display = 'block';
+            progressContainer.style.display = 'none';
+            btnUpload.disabled = false;
+            if (btnCamera) btnCamera.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: black;
+            color: white;
+            padding: 20px;
+            display: none;
+        }
+
+        .logo img {
+            width: 160px;
+            margin: auto;
+            display: block;
+            margin-bottom: 30px;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-item {
+            margin-bottom: 10px;
+        }
+
+        .menu-item > span,
+        .menu-item > a {
+            cursor: pointer;
+            display: block;
+            font-weight: 700;
+            color: #e2e8f0;
+            background: #1f2937;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px 12px;
+            text-decoration: none;
+        }
+
+        .content {
+            flex: 1;
+            background: white;
+            position: relative;
+            padding: 20px;
+        }
+
+        .background-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: url('/static/img/logo.png') no-repeat center;
+            background-size: contain;
+            opacity: 0.05;
+            pointer-events: none;
+        }
+
+        .page {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 40px);
+        }
+
+        .upload-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 6px 18px rgba(13, 23, 34, 0.10);
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .upload-logo {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            background: #111;
+            border: 2px solid #d4af37;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 40px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+
+        .dropzone {
+            border: 2px dashed #d4af37;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 18px;
+            color: #4b4b4b;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dropzone.dragover {
+            border-color: #b88a1d;
+            background: #fff9e8;
+            transform: scale(1.01);
+        }
+        
+        .btn-upload {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #111111 0%, #2a2a2a 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+            border: 1px solid #d4af37;
+        }
+        
+        .btn-upload:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-upload:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #111111 0%, #d4af37 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        
+        .message {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .message.success {
+            background: #fff9e8;
+            color: #2a220f;
+            border-left: 4px solid #d4af37;
+            display: block;
+        }
+        
+        .message.error {
+            background: #fff1f1;
+            color: #5f1b1b;
+            border-left: 4px solid #aa2a2a;
+            display: block;
+        }
+        
+        .icon-success {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .ocr-box {
+            margin-top: 18px;
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: left;
+            display: none !important;
+        }
+
+        .ocr-title {
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .ocr-content {
+            white-space: pre-wrap;
+            max-height: 220px;
+            overflow: auto;
+            font-size: 12px;
+            color: #111827;
+            line-height: 1.35;
+        }
+
+        .fields-box {
+            margin-top: 14px;
+            border: 1px solid #d4af37;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 12px;
+            text-align: left;
+            display: none;
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 13px;
+            padding: 4px 0;
+            border-bottom: 1px dashed #ececec;
+        }
+
+        .field-row:last-child {
+            border-bottom: none;
+        }
+
+        .field-label {
+            color: #4e4221;
+            font-weight: 600;
+        }
+
+        .field-value {
+            color: #111827;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                display: block;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .page {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="/static/img/logo.png" alt="FTRA Logo">
+            </div>
+            <ul class="menu">
+                <li class="menu-item"><a href="/subir-factura">📤 Subir factura</a></li>
+                <li class="menu-item"><a href="/dashboard">📊 Dashboard</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <div class="background-logo"></div>
+            <div class="page">
+                <div class="upload-card">
+                    <div class="upload-logo">
+                        <img src="/static/img/logo.png" alt="Logo corona">
+                    </div>
+                    <h1>Subir Factura</h1>
+                    <p class="subtitle">PDF o fotografía · También puedes arrastrar y soltar</p>
+
+                    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.tiff">
+
+                    <div class="dropzone" id="dropzone" onclick="abrirGaleria()">
+                        Arrastra tu archivo aquí o haz clic para seleccionarlo
+                    </div>
+
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                        <button class="btn-upload" id="btnCamera" onclick="abrirCamara()" style="flex:1;min-width:220px;">
+                            📷 Tomar foto
+                        </button>
+                        <button class="btn-upload" id="btnUpload" onclick="abrirGaleria()" style="flex:1;min-width:220px;">
+                            📎 Adjuntar archivo
+                        </button>
+                    </div>
+
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Subiendo...</div>
+                    </div>
+
+                    <div class="message" id="message"></div>
+
+                    <div class="ocr-box" id="ocrBox">
+                        <div class="ocr-title">Texto detectado (preview OCR)</div>
+                        <div class="ocr-content" id="ocrContent"></div>
+                    </div>
+
+                    <div class="fields-box" id="fieldsBox">
+                        <div class="ocr-title">Campos extraídos</div>
+                        <div id="fieldsContent"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        const btnUpload = document.getElementById('btnUpload');
+        const btnCamera = document.getElementById('btnCamera');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const message = document.getElementById('message');
+        const dropzone = document.getElementById('dropzone');
+        const ocrBox = document.getElementById('ocrBox');
+        const ocrContent = document.getElementById('ocrContent');
+        const SHOW_OCR_PREVIEW = false;
+        const fieldsBox = document.getElementById('fieldsBox');
+        const fieldsContent = document.getElementById('fieldsContent');
+
+        function formatNumberEs(value) {
+            if (value === null || value === undefined || value === '') return '—';
+            const n = Number(value);
+            if (Number.isNaN(n)) return String(value);
+            return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function renderCampos(campos) {
+            if (!campos || typeof campos !== 'object') {
+                fieldsBox.style.display = 'none';
+                fieldsContent.innerHTML = '';
+                return;
+            }
+
+            const rows = [
+                ['Factura Nº', campos.factura_numero || '—'],
+                ['Fecha emisión', campos.fecha_emision || '—'],
+                ['NIF cliente', campos.nif_cliente || '—'],
+                ['Cliente', campos.cliente || '—'],
+                ['Base imponible', campos.base_imponible != null ? `${formatNumberEs(campos.base_imponible)} €` : '—'],
+                ['IVA', campos.iva != null ? `${formatNumberEs(campos.iva)} €` : '—'],
+                ['Total', campos.total != null ? `${formatNumberEs(campos.total)} €` : '—'],
+            ];
+
+            fieldsContent.innerHTML = rows.map(([label, value]) => `
+                <div class="field-row">
+                    <span class="field-label">${label}</span>
+                    <span class="field-value">${value}</span>
+                </div>
+            `).join('');
+
+            fieldsBox.style.display = 'block';
+        }
+        
+        function abrirGaleria() {
+            fileInput.removeAttribute('capture');
+            fileInput.click();
+        }
+
+        function abrirCamara() {
+            fileInput.setAttribute('capture', 'environment');
+            fileInput.click();
+        }
+        
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            subirFactura(file);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('dragover');
+            });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const file = e.dataTransfer?.files?.[0];
+            if (!file) return;
+            subirFactura(file);
+        });
+        
+        async function subirFactura(file) {
+            btnUpload.disabled = true;
+            if (btnCamera) btnCamera.disabled = true;
+            progressContainer.style.display = 'block';
+            message.style.display = 'none';
+            ocrBox.style.display = 'none';
+            ocrContent.textContent = '';
+            fieldsBox.style.display = 'none';
+            fieldsContent.innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                // Simular progreso
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress = Math.min(progress + Math.random() * 30, 90);
+                    progressFill.style.width = progress + '%';
+                    progressText.textContent = Math.round(progress) + '%';
+                }, 200);
+                
+                // Enviar archivo
+                const response = await fetch('/api/facturas/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(interval);
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    setTimeout(() => {
+                        message.className = 'message success';
+                        message.innerHTML = `
+                            <div class="icon-success">✅</div>
+                            <strong>¡Factura subida correctamente!</strong><br>
+                            <small>ID: #${data.factura_id}</small><br>
+                            <small>OCR: ${data.ocr_exitoso ? 'procesado' : 'no disponible'}</small>
+                        `;
+                        message.style.display = 'block';
+
+                        if (SHOW_OCR_PREVIEW) {
+                            if (data.texto_ocr_preview) {
+                                ocrContent.textContent = data.texto_ocr_preview;
+                                ocrBox.style.display = 'block';
+                            } else if (data.ocr_error) {
+                                ocrContent.textContent = `No se pudo extraer texto OCR. Motivo: ${data.ocr_error}`;
+                                ocrBox.style.display = 'block';
+                            } else {
+                                ocrContent.textContent = 'No se detectó texto legible en el archivo (puede ser imagen de baja calidad).';
+                                ocrBox.style.display = 'block';
+                            }
+                        }
+
+                        renderCampos(data.campos_extraidos);
+
+                        progressContainer.style.display = 'none';
+                        btnUpload.disabled = false;
+                        if (btnCamera) btnCamera.disabled = false;
+                        
+                        // Reset
+                        fileInput.value = '';
+                    }, 500);
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'Error en respuesta del servidor');
+                }
+            } catch (err) {
+                message.className = 'message error';
+                message.innerHTML = `
+                    <strong>Error al subir</strong><br>
+                    <small>${err.message}</small>
+                `;
+                message.style.display = 'block';
+                progressContainer.style.display = 'none';
+                btnUpload.disabled = false;
+                if (btnCamera) btnCamera.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

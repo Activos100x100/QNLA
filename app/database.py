@@ -1,53 +1,83 @@
-import psycopg2
+"""
+Configuración de base de datos PostgreSQL con SQLAlchemy.
+Maneja la conexión y sesiones con la base de datos.
+"""
+
 import os
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
+# Cargar variables de entorno
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
-# Load root .env first
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-# Optional legacy fallback for this project (disabled by setting ALLOW_LEGACY_APP_ENV=false)
+# Legacy fallback
 if not os.getenv('DATABASE_URL') and os.getenv('ALLOW_LEGACY_APP_ENV', 'true').strip().lower() == 'true':
     legacy_env_path = os.path.join(os.path.dirname(__file__), 'Archivo .env')
     if os.path.exists(legacy_env_path):
         load_dotenv(legacy_env_path)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Obtener URL de base de datos
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./facturas_dev.db")
+
+# Permitir tanto PostgreSQL como SQLite
+if "postgresql" not in DATABASE_URL and "sqlite" not in DATABASE_URL:
+    raise ValueError(f"DATABASE_URL debe ser PostgreSQL o SQLite: {DATABASE_URL}")
+
+# Crear engine de SQLAlchemy con parámetros específicos por BD
+engine_kwargs = {
+    "echo": False,  # Cambiar a True para ver queries SQL
+    "pool_pre_ping": True,  # Validar conexiones antes de usarlas
+}
+
+if "sqlite" in DATABASE_URL:
+    # SQLite no soporta pool_size/max_overflow
+    engine = create_engine(DATABASE_URL, **engine_kwargs, connect_args={"check_same_thread": False})
+else:
+    # PostgreSQL
+    engine_kwargs.update({
+        "pool_size": 10,
+        "max_overflow": 20
+    })
+    engine = create_engine(DATABASE_URL, **engine_kwargs)
+
+# Crear SessionLocal para obtener sesiones
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+# Base para los modelos
+Base = declarative_base()
 
 
-def _build_connection_kwargs():
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-    db_user = os.getenv("DB_USER")
-    db_password = os.getenv("DB_PASSWORD")
-    db_port = os.getenv("DB_PORT", "5432")
-    db_sslmode = os.getenv("DB_SSLMODE", "require")
+def get_db():
+    """
+    Dependency para obtener sesión de base de datos.
+    Usado en los endpoints de FastAPI.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    if not all([db_host, db_name, db_user, db_password]):
-        return None
 
-    kwargs = {
-        "host": db_host,
-        "dbname": db_name,
-        "user": db_user,
-        "password": db_password,
-        "port": db_port,
-    }
+def init_db():
+    """
+    Crea todas las tablas en la base de datos.
+    """
+    Base.metadata.create_all(bind=engine)
 
-    if not str(db_host).startswith("/cloudsql/"):
-        kwargs["sslmode"] = db_sslmode
 
-    return kwargs
-
-def get_connection():
-    database_url = os.getenv("DATABASE_URL") or DATABASE_URL
-    db_sslmode = os.getenv("DB_SSLMODE", "require")
-    if database_url:
-        return psycopg2.connect(
-            database_url,
-            sslmode=db_sslmode
-        )
+def drop_db():
+    """
+    Elimina todas las tablas de la base de datos.
+    ADVERTENCIA: Destructivo, solo para desarrollo.
+    """
+    Base.metadata.drop_all(bind=engine)
 
     connection_kwargs = _build_connection_kwargs()
     if connection_kwargs:

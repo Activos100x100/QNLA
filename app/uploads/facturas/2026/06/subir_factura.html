@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTRA - Subir Factura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 40px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 40px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .btn-upload {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-upload:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-upload:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        
+        .message {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+            display: block;
+        }
+        
+        .icon-success {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📄</div>
+        <h1>Subir Factura</h1>
+        <p class="subtitle">PDF o fotografía</p>
+        
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.tiff" capture="environment">
+        
+        <button class="btn-upload" id="btnUpload" onclick="abrirGaleria()">
+            📱 Subir Factura
+        </button>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Subiendo...</div>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+    
+    <script>
+        const btnUpload = document.getElementById('btnUpload');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const message = document.getElementById('message');
+        
+        function abrirGaleria() {
+            fileInput.click();
+        }
+        
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            subirFactura(file);
+        });
+        
+        async function subirFactura(file) {
+            btnUpload.disabled = true;
+            progressContainer.style.display = 'block';
+            message.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                // Simular progreso
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress = Math.min(progress + Math.random() * 30, 90);
+                    progressFill.style.width = progress + '%';
+                    progressText.textContent = Math.round(progress) + '%';
+                }, 200);
+                
+                // Enviar archivo
+                const response = await fetch('/api/facturas/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(interval);
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    setTimeout(() => {
+                        message.className = 'message success';
+                        message.innerHTML = `
+                            <div class="icon-success">✅</div>
+                            <strong>¡Factura subida correctamente!</strong><br>
+                            <small>ID: #${data.factura_id}</small>
+                        `;
+                        progressContainer.style.display = 'none';
+                        btnUpload.disabled = false;
+                        
+                        // Reset
+                        fileInput.value = '';
+                        
+                        // Redirigir al dashboard después de 2 segundos
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 2000);
+                    }, 500);
+                } else {
+                    throw new Error('Error en respuesta del servidor');
+                }
+            } catch (err) {
+                message.className = 'message error';
+                message.innerHTML = `
+                    <strong>Error al subir</strong><br>
+                    <small>${err.message}</small>
+                `;
+                progressContainer.style.display = 'none';
+                btnUpload.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

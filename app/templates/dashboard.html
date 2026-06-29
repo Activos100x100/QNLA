@@ -1,85 +1,426 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
 
-{% block styles %}
-<style>
-	.welcome-hero {
-		min-height: calc(100vh - 120px);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		gap: 22px;
-		padding: 12px 0 32px;
-	}
-
-	.welcome-title {
-		margin: 0;
-		font-size: clamp(1.9rem, 3.6vw, 3.1rem);
-		line-height: 1.2;
-		color: #111827;
-		font-weight: 800;
-		text-wrap: balance;
-	}
-
-	.welcome-subtitle {
-		margin: 0;
-		font-size: clamp(1rem, 1.5vw, 1.25rem);
-		color: #b45309;
-		font-weight: 700;
-	}
-
-	.welcome-photo {
-		width: min(62vw, 420px);
-		max-height: 56vh;
-		object-fit: cover;
-		filter: brightness(1.06) contrast(1.04) saturate(1.03);
-		opacity: 1;
-		border-radius: 18px;
-		box-shadow: 0 20px 52px rgba(0, 0, 0, 0.24);
-		border: 3px solid #f3f4f6;
-		background: #e5e7eb;
-	}
-
-	.welcome-photo-wrap {
-		position: relative;
-		display: inline-block;
-		overflow: hidden;
-		border-radius: 18px;
-	}
-
-	.welcome-photo-wrap::after {
-		content: "QNLA";
-		position: absolute;
-		left: 16px;
-		bottom: 14px;
-		transform: rotate(-8deg);
-		color: rgba(255, 255, 255, 0.34);
-		font-size: clamp(0.82rem, 1.9vw, 1.05rem);
-		font-weight: 800;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		white-space: nowrap;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
-		pointer-events: none;
-	}
-</style>
-{% endblock %}
+{% block title %}Dashboard - FTRA{% endblock %}
 
 {% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <p class="text-muted mb-0">Bienvenido al sistema de procesamiento de facturas</p>
+    </div>
+    <a href="/cargar" class="btn btn-primary">
+        <i class="bi bi-cloud-arrow-up me-2"></i>Cargar Facturas
+    </a>
+</div>
 
-<section class="welcome-hero">
-	<h1 class="welcome-title">Bienvenidos a QNLA 🌍</h1>
-	<p class="welcome-subtitle">Tu centro de operaciones está listo 🔥</p>
+<!-- Stats Row 1 -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon primary">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </div>
+            <div class="stat-label">Facturas Hoy</div>
+            <div class="stat-value">12</div>
+            <div class="stat-change up">
+                <i class="bi bi-arrow-up"></i> 2 vs ayer
+            </div>
+        </div>
+    </div>
 
-	<div class="welcome-photo-wrap">
-		<img
-			class="welcome-photo"
-			src="/static/img/nachito_mundialista.png"
-			alt="QNLA"
-			onerror="this.onerror=null;this.src='/static/img/logo.png';"
-		>
-	</div>
-</section>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="stat-icon success">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-label">Procesadas</div>
+            <div class="stat-value">248</div>
+            <div class="stat-change up">
+                <i class="bi bi-arrow-up"></i> 12 esta semana
+            </div>
+        </div>
+    </div>
 
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card warning">
+            <div class="stat-icon warning">
+                <i class="bi bi-exclamation-circle"></i>
+            </div>
+            <div class="stat-label">Pendientes Revisión</div>
+            <div class="stat-value">18</div>
+            <div class="stat-change down">
+                <i class="bi bi-arrow-down"></i> 3 menos
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card danger">
+            <div class="stat-icon danger">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="stat-label">Con Errores</div>
+            <div class="stat-value">4</div>
+            <div class="stat-change down">
+                <i class="bi bi-arrow-down"></i> 1 menos
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row 2 -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon primary">
+                <i class="bi bi-currency-euro"></i>
+            </div>
+            <div class="stat-label">Importe Total</div>
+            <div class="stat-value">€24.580</div>
+            <div class="stat-change up">
+                <i class="bi bi-arrow-up"></i> 8% vs mes anterior
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon primary">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-label">IVA Detectado</div>
+            <div class="stat-value">€4.125</div>
+            <div class="stat-change">
+                <i class="bi bi-dash"></i> 21% promedio
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon primary">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-label">Tiempo Promedio</div>
+            <div class="stat-value">2.3s</div>
+            <div class="stat-change down">
+                <i class="bi bi-arrow-down"></i> 0.5s más rápido
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon primary">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="stat-label">Confianza Promedio</div>
+            <div class="stat-value">91%</div>
+            <div class="stat-change up">
+                <i class="bi bi-arrow-up"></i> 3% más alta
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <!-- Gráfico de Facturas por Día -->
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Facturas Procesadas por Día</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="chartByDay"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Importe Mensual -->
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Importe Mensual</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="chartMonthly"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charts Row -->
+<div class="row g-3 mb-4">
+    <!-- Facturas por Proveedor -->
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top Proveedores</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="chartProviders"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribución de Estados -->
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Estados de Facturas</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="chartStatus"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confianza IA -->
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Confianza IA</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="chartConfidence"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Invoices -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Facturas Recientes</h5>
+        <a href="/facturas" class="btn btn-sm btn-ghost-secondary">
+            Ver todas <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Proveedor</th>
+                        <th>Fecha</th>
+                        <th>Importe</th>
+                        <th>Confianza</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>INV-001</strong></td>
+                        <td>Leroy Merlin</td>
+                        <td>27 de junio, 2026</td>
+                        <td>€1.245,50</td>
+                        <td><span class="badge badge-confianza alta">95% Alta</span></td>
+                        <td><span class="badge badge-status aprobada">Aprobada</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-ghost-secondary" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>INV-002</strong></td>
+                        <td>Repsol</td>
+                        <td>26 de junio, 2026</td>
+                        <td>€2.580,00</td>
+                        <td><span class="badge badge-confianza media">78% Media</span></td>
+                        <td><span class="badge badge-status pendiente">Pendiente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-ghost-secondary" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>INV-003</strong></td>
+                        <td>Amazon Business</td>
+                        <td>25 de junio, 2026</td>
+                        <td>€445,20</td>
+                        <td><span class="badge badge-confianza alta">92% Alta</span></td>
+                        <td><span class="badge badge-status aprobada">Aprobada</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-ghost-secondary" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>INV-004</strong></td>
+                        <td>Google Cloud</td>
+                        <td>24 de junio, 2026</td>
+                        <td>€3.200,00</td>
+                        <td><span class="badge badge-confianza baja">45% Baja</span></td>
+                        <td><span class="badge badge-status error">Error</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-ghost-secondary" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Datos de ejemplo (en producción, estos vendrían del backend)
+    const dashboardData = {
+        byDay: {
+            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sab', 'Dom'],
+            data: [12, 19, 15, 25, 22, 8, 3]
+        },
+        monthly: {
+            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+            data: [18250, 21500, 19800, 25400, 22100, 24580]
+        },
+        providers: {
+            labels: ['Leroy Merlin', 'Repsol', 'Amazon', 'Google', 'Otros'],
+            data: [45, 32, 28, 15, 42]
+        },
+        status: {
+            labels: ['Aprobada', 'Pendiente', 'Error', 'Archivada'],
+            data: [180, 45, 12, 11]
+        },
+        confidence: {
+            labels: ['Alta (85-100%)', 'Media (70-84%)', 'Baja (<70%)'],
+            data: [156, 62, 30]
+        }
+    };
+
+    // Configuración común
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                labels: {
+                    font: { size: 12, weight: 'bold' }
+                }
+            }
+        }
+    };
+
+    // Gráfico de Facturas por Día
+    const ctxDay = document.getElementById('chartByDay').getContext('2d');
+    new Chart(ctxDay, {
+        type: 'line',
+        data: {
+            labels: dashboardData.byDay.labels,
+            datasets: [{
+                label: 'Facturas',
+                data: dashboardData.byDay.data,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#2563eb',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Gráfico de Importe Mensual
+    const ctxMonthly = document.getElementById('chartMonthly').getContext('2d');
+    new Chart(ctxMonthly, {
+        type: 'bar',
+        data: {
+            labels: dashboardData.monthly.labels,
+            datasets: [{
+                label: 'Importe (€)',
+                data: dashboardData.monthly.data,
+                backgroundColor: '#2563eb',
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            ...chartOptions,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '€' + value.toLocaleString('es-ES');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Proveedores
+    const ctxProviders = document.getElementById('chartProviders').getContext('2d');
+    new Chart(ctxProviders, {
+        type: 'doughnut',
+        data: {
+            labels: dashboardData.providers.labels,
+            datasets: [{
+                data: dashboardData.providers.data,
+                backgroundColor: [
+                    '#2563eb',
+                    '#0891b2',
+                    '#16a34a',
+                    '#ea580c',
+                    '#64748b'
+                ]
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Gráfico de Estados
+    const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'pie',
+        data: {
+            labels: dashboardData.status.labels,
+            datasets: [{
+                data: dashboardData.status.data,
+                backgroundColor: [
+                    '#16a34a',
+                    '#ea580c',
+                    '#dc2626',
+                    '#64748b'
+                ]
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Gráfico de Confianza
+    const ctxConfidence = document.getElementById('chartConfidence').getContext('2d');
+    new Chart(ctxConfidence, {
+        type: 'polarArea',
+        data: {
+            labels: dashboardData.confidence.labels,
+            datasets: [{
+                data: dashboardData.confidence.data,
+                backgroundColor: [
+                    '#16a34a',
+                    '#ea580c',
+                    '#dc2626'
+                ],
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 2
+            }]
+        },
+        options: chartOptions
+    });
+</script>
 {% endblock %}

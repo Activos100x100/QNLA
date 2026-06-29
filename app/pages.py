@@ -9,7 +9,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
-    return RedirectResponse("/qnla/admin/torneos")
+    return RedirectResponse("/ftra/admin/torneos")
 
 
 @router.get("/empleados/alta", response_class=HTMLResponse)

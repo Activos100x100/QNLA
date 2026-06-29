@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#111111">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>FTRA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --gold: #d4af37;
+            --black: #111111;
+            --dark: #1a1a1a;
+            --bg: #f4f4f4;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: #111;
+        }
+
+        /* ─── APP SHELL ─── */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ─── TOP BAR ─── */
+        .topbar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--black);
+            padding: 14px 18px;
+            padding-top: max(14px, env(safe-area-inset-top));
+            z-index: 50;
+        }
+
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px;
+            padding: 5px 12px 5px 8px;
+            cursor: pointer;
+        }
+
+        .user-pill span {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 600;
+            max-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--black);
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Botón hamburguesa */
+        .btn-menu {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .btn-menu span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        /* ─── GREETING BAND ─── */
+        .greeting-band {
+            flex-shrink: 0;
+            background: var(--black);
+            padding: 0 18px 20px;
+        }
+
+        .greeting-band .hello {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .greeting-band .name {
+            font-size: 26px;
+            font-weight: 800;
+            color: white;
+            line-height: 1.15;
+        }
+
+        .greeting-band .rider-info {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .rider-info .label {
+            color: rgba(255,255,255,0.4);
+            font-weight: 600;
+        }
+
+        .rider-info .value {
+            color: rgba(255,255,255,0.8);
+            font-weight: 700;
+        }
+
+        /* ─── SCROLL PAGES ─── */
+        .pages-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .pages-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .page-slide {
+            flex-shrink: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 24px 18px 100px;
+        }
+
+        /* ─── SECTION TITLE ─── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .section-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--black);
+            border: 1.5px solid var(--gold);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .section-title { font-size: 20px; font-weight: 800; color: #111; }
+        .section-sub   { font-size: 12px; color: #999; margin-top: 1px; }
+
+        /* ─── ACTION CARDS ─── */
+        .action-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: #111;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            border: 1.5px solid #ebebeb;
+            transition: all 0.18s;
+            cursor: pointer;
+        }
+
+        .action-card:active {
+            transform: scale(0.97);
+            border-color: var(--gold);
+        }
+
+        .action-card .ac-icon {
+            width: 48px;
+            height: 48px;
+            background: #f5f5f5;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .action-card .ac-text { flex: 1; }
+        .action-card .ac-label { font-size: 15px; font-weight: 700; }
+        .action-card .ac-desc  { font-size: 12px; color: #999; margin-top: 2px; }
+
+        .action-card .ac-arrow {
+            font-size: 18px;
+            color: #ccc;
+        }
+
+        .action-card.primary .ac-icon {
+            background: var(--black);
+        }
+
+        /* Disabled */
+        .action-card.disabled {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .badge-soon {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--gold);
+            color: var(--black);
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+        }
+
+        /* ─── DOT INDICATORS ─── */
+        .dots {
+            position: absolute;
+            bottom: 16px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ccc;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: var(--black);
+            width: 20px;
+            border-radius: 4px;
+        }
+
+        /* ─── TAB BAR ─── */
+        .tabbar {
+            flex-shrink: 0;
+            display: flex;
+            background: white;
+            border-top: 1px solid #ebebeb;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 10px 0;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            color: #bbb;
+            font-size: 10px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .tab-item .tab-icon { font-size: 22px; }
+
+        .tab-item.active {
+            color: var(--black);
+        }
+
+        .tab-item.active .tab-icon-wrap {
+            background: var(--black);
+            border-radius: 12px;
+            padding: 6px 14px;
+        }
+
+        /* ─── DRAWER ─── */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 78vw;
+            max-width: 300px;
+            background: var(--black);
+            z-index: 110;
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: max(20px, env(safe-area-inset-top)) 0 max(20px, env(safe-area-inset-bottom));
+        }
+
+        .drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-head {
+            padding: 20px 22px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .drawer-avatar {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--black);
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .drawer-hello {
+            font-size: 12px;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 2px;
+        }
+
+        .drawer-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .drawer-nav {
+            flex: 1;
+            padding: 14px 0;
+            overflow-y: auto;
+        }
+
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 15px 22px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: rgba(255,255,255,0.8);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .drawer-item:hover, .drawer-item.active {
+            background: rgba(255,255,255,0.07);
+            color: white;
+        }
+
+        .drawer-item.active {
+            border-left: 3px solid var(--gold);
+            padding-left: 19px;
+            color: var(--gold);
+        }
+
+        .drawer-item .di-icon {
+            font-size: 20px;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .drawer-footer {
+            padding: 14px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .drawer-item.logout {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <button class="btn-menu" id="btnMenu" aria-label="Menú">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-logo">
+            <img src="/static/img/logo.png" alt="FTRA">
+            <span class="topbar-title">FTRA</span>
+        </div>
+        <div class="user-pill" id="btnMenuAlt">
+            <div class="user-avatar" id="userInitial"></div>
+            <span id="userName"></span>
+        </div>
+    </header>
+
+    <!-- GREETING -->
+    <div class="greeting-band">
+        <div class="hello" id="greetingText"></div>
+        <div class="name" id="greetingName"></div>
+        <div class="rider-info" id="riderInfo" style="display:none;">
+            <div><span class="label">Cod. Activo:</span> <span class="value" id="codActivoValue"></span></div>
+            <div><span class="label">Rider:</span> <span class="value" id="riderIdValue"></span></div>
+        </div>
+    </div>
+
+    <!-- SLIDES -->
+    <div class="pages-wrapper">
+        <div class="pages-track" id="pagesTrack">
+
+            <!-- SLIDE 1: Gestión de Facturas -->
+            <div class="page-slide">
+                <div class="section-header">
+                    <div class="section-icon">🧾</div>
+                    <div>
+                        <div class="section-title">Gestión de Facturas</div>
+                        <div class="section-sub">Administra tus facturas</div>
+                    </div>
+                </div>
+
+                <a href="/subir-factura" class="action-card primary">
+                    <div class="ac-icon">📤</div>
+                    <div class="ac-text">
+                        <div class="ac-label">Subir nueva factura</div>
+                        <div class="ac-desc">PDF o fotografía</div>
+                    </div>
+                    <span class="ac-arrow">›</span>
+                </a>
+            </div>
+
+            <!-- SLIDE 2: CASH OUT -->
+            <div class="page-slide">
+                <div class="section-header">
+                    <div class="section-icon">💰</div>
+                    <div>
+                        <div class="section-title">CASH OUT</div>
+                        <div class="section-sub" id="cashoutSub">Solicitudes y anticipos</div>
+                    </div>
+                </div>
+
+                <!-- Contenedor de deuda (solo para riders) -->
+                <div id="deudaContainer" style="display: none;">
+                    <div style="background: #f5f5f5; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+                        <div style="font-size: 12px; color: #999; margin-bottom: 6px;">Mes: <span id="mesNombre"></span></div>
+                        <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <th style="text-align: left; padding: 8px 0; font-weight: 600; color: #333;">Semana</th>
+                                    <th style="text-align: right; padding: 8px 0; font-weight: 600; color: #333;">Deuda</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deudaRows">
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1.5px solid #ddd; display: flex; justify-content: space-between; font-weight: 700; color: #111;">
+                            <span>TOTAL</span>
+                            <span id="deudaTotal">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de acción (solo para riders) -->
+                <div class="action-card" id="cashoutCard" style="display: none;">
+                    <div class="ac-icon">💵</div>
+                    <div class="ac-text">
+                        <div class="ac-label">Solicitar anticipo</div>
+                        <div class="ac-desc">Retira tus ganancias</div>
+                    </div>
+                    <span class="ac-arrow">›</span>
+                </div>
+
+                <!-- Fallback para no riders -->
+                <div id="noRiderMsg" style="text-align: center; padding: 40px 20px; color: #999;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">📦</div>
+                    <div style="font-size: 14px; font-weight: 600;">Próximamente</div>
+                    <div style="font-size: 12px; color: #bbb; margin-top: 4px;">Esta función está disponible para riders</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Dots -->
+        <div class="dots" id="dots">
+            <div class="dot active" data-index="0"></div>
+            <div class="dot" data-index="1"></div>
+        </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <nav class="tabbar" id="tabbar">
+        <button class="tab-item active" data-page="0">
+            <span class="tab-icon">🧾</span>
+            <span>Facturas</span>
+        </button>
+        <button class="tab-item" data-page="1">
+            <span class="tab-icon">💰</span>
+            <span>Cash Out</span>
+        </button>
+    </nav>
+
+</div>
+
+<!-- DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER -->
+<nav class="drawer" id="drawer">
+    <div class="drawer-head">
+        <div class="drawer-avatar" id="drawerInitial"></div>
+        <div class="drawer-hello" id="drawerHello"></div>
+        <div class="drawer-name" id="drawerName"></div>
+    </div>
+    <div class="drawer-nav">
+        <button class="drawer-item active" onclick="goToPage(0); closeDrawer()">
+            <span class="di-icon">🧾</span> Gestión de Facturas
+        </button>
+        <button class="drawer-item" onclick="goToPage(1); closeDrawer()">
+            <span class="di-icon">💰</span> CASH OUT
+        </button>
+        <a href="/subir-factura" class="drawer-item">
+            <span class="di-icon">📤</span> Subir factura
+        </a>
+    </div>
+    <div class="drawer-footer">
+        <a href="/logout" class="drawer-item logout">
+            <span class="di-icon">🚪</span> Salir
+        </a>
+    </div>
+</nav>
+
+<script>
+    // ── Datos del servidor ──
+    const SALUDO = {{ saludo | tojson }};
+    const NOMBRE = {{ nombre | tojson }};
+    const ES_RIDER = {{ es_rider | tojson }};
+    const COD_ACTIVO = {{ cod_activo | tojson }};
+    const RIDER_ID = {{ rider_id | tojson }};
+    const DEUDA_TOTAL = {{ deuda_total | tojson }};
+    const DEUDA_SEMANAS = {{ deuda_semanas | tojson }};
+
+    // ── Inyectar nombre y datos de rider ──
+    const initial = NOMBRE ? NOMBRE.charAt(0).toUpperCase() : '?';
+    document.getElementById('userInitial').textContent = initial;
+    document.getElementById('userName').textContent    = NOMBRE.split(' ')[0];
+    document.getElementById('greetingText').textContent = SALUDO + ',';
+    document.getElementById('greetingName').textContent  = NOMBRE;
+    document.getElementById('drawerInitial').textContent = initial;
+    document.getElementById('drawerHello').textContent   = SALUDO;
+    document.getElementById('drawerName').textContent    = NOMBRE;
+
+    // ── Mostrar datos de rider si aplica ──
+    if (ES_RIDER && (COD_ACTIVO || RIDER_ID)) {
+        document.getElementById('riderInfo').style.display = 'block';
+        document.getElementById('codActivoValue').textContent = COD_ACTIVO || '—';
+        document.getElementById('riderIdValue').textContent = RIDER_ID || '—';
+        
+        // Mostrar deuda desglosada por semana
+        document.getElementById('deudaContainer').style.display = 'block';
+        document.getElementById('noRiderMsg').style.display = 'none';
+        document.getElementById('cashoutCard').style.display = 'flex';
+        
+        // Renderizar tabla de deuda por semana
+        const deudaRows = document.getElementById('deudaRows');
+        deudaRows.innerHTML = '';
+        
+        DEUDA_SEMANAS.forEach(semana => {
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #efefef';
+            row.innerHTML = `
+                <td style="padding: 10px 0; color: #666;">S${semana.numero}</td>
+                <td style="text-align: right; padding: 10px 0; color: #333; font-weight: 600;">$${semana.importe.toFixed(2)}</td>
+            `;
+            deudaRows.appendChild(row);
+        });
+        
+        // Mostrar total
+        document.getElementById('deudaTotal').textContent = `$${DEUDA_TOTAL.toFixed(2)}`;
+        
+        // Llenar mes (extraer de DEUDA_SEMANAS[0] si existe)
+        const mesNombre = DEUDA_SEMANAS.length > 0 ? 
+            `${DEUDA_SEMANAS[0].iso_year}-W${String(DEUDA_SEMANAS[0].iso_week).padStart(2, '0')}` 
+            : 'N/A';
+        document.getElementById('mesNombre').textContent = mesNombre;
+        
+        // Click en CASH OUT
+        const cashoutCard = document.getElementById('cashoutCard');
+        cashoutCard.onclick = () => { alert('CASH OUT: Próximamente'); };
+        cashoutCard.style.cursor = 'pointer';
+    } else {
+        // No es rider
+        document.getElementById('deudaContainer').style.display = 'none';
+        document.getElementById('noRiderMsg').style.display = 'block';
+        document.getElementById('cashoutCard').style.display = 'none';
+    }
+
+    // ── Slider ──
+    const track  = document.getElementById('pagesTrack');
+    const dots   = document.querySelectorAll('.dot');
+    const tabs   = document.querySelectorAll('.tab-item');
+    const items  = document.querySelectorAll('.drawer-item');
+    let current  = 0;
+
+    function goToPage(n) {
+        current = n;
+        track.style.transform = `translateX(-${n * 100}%)`;
+        dots.forEach((d, i) => d.classList.toggle('active', i === n));
+        tabs.forEach((t, i) => t.classList.toggle('active', i === n));
+        document.querySelectorAll('.drawer-item[data-page]')
+            .forEach((it, i) => it.classList.toggle('active', i === n));
+    }
+
+    // Tabs
+    tabs.forEach(t => t.addEventListener('click', () => goToPage(+t.dataset.page)));
+    dots.forEach(d => d.addEventListener('click', () => goToPage(+d.dataset.index)));
+
+    // ── Swipe ──
+    let startX = 0, startY = 0, dragging = false;
+
+    track.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dragging = true;
+    }, { passive: true });
+
+    track.addEventListener('touchend', e => {
+        if (!dragging) return;
+        dragging = false;
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+            const pages = document.querySelectorAll('.page-slide').length;
+            if (dx < 0 && current < pages - 1) goToPage(current + 1);
+            if (dx > 0 && current > 0)         goToPage(current - 1);
+        }
+    }, { passive: true });
+
+    // ── Drawer ──
+    function openDrawer() {
+        document.getElementById('drawer').classList.add('open');
+        document.getElementById('drawerOverlay').classList.add('open');
+    }
+
+    function closeDrawer() {
+        document.getElementById('drawer').classList.remove('open');
+        document.getElementById('drawerOverlay').classList.remove('open');
+    }
+
+    document.getElementById('btnMenu').addEventListener('click', openDrawer);
+    document.getElementById('btnMenuAlt').addEventListener('click', openDrawer);
+</script>
+</body>
+</html>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        /* ── Layout ── */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content {
+            flex: 1;
+            background: white;
+            position: relative;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .background-logo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: url('/static/img/logo.png') no-repeat center;
+            background-size: contain;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px 40px;
+            min-height: 100%;
+        }
+
+        /* ── Header ── */
+        .header {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #111;
+            border: 2px solid #d4af37;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-text .greeting {
+            font-size: 13px;
+            color: #999;
+            line-height: 1.2;
+        }
+
+        .header-text .name {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111;
+            line-height: 1.2;
+        }
+
+        .btn-logout {
+            background: none;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 13px;
+            color: #888;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-logout:hover {
+            border-color: #cc3333;
+            color: #cc3333;
+        }
+
+        /* ── Menú cards ── */
+        .menu-grid {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(13, 23, 34, 0.09);
+            border: 1.5px solid #f0f0f0;
+            overflow: hidden;
+        }
+
+        /* Cabecera del card (acordeón) */
+        .menu-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 22px;
+            cursor: pointer;
+            user-select: none;
+            background: white;
+            transition: background 0.2s;
+        }
+
+        .menu-card-header:hover {
+            background: #fafafa;
+        }
+
+        .menu-card-header.open {
+            border-bottom: 1.5px solid #f0f0f0;
+        }
+
+        .menu-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            border: 1px solid #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .menu-label {
+            font-size: 17px;
+            font-weight: 800;
+            color: #111;
+        }
+
+        .menu-sublabel {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .chevron {
+            font-size: 18px;
+            color: #ccc;
+            transition: transform 0.25s;
+        }
+
+        .menu-card-header.open .chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Opciones desplegables */
+        .menu-card-body {
+            display: none;
+            padding: 8px 12px 12px;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .menu-card-body.open {
+            display: flex;
+        }
+
+        .menu-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #222;
+            font-size: 15px;
+            font-weight: 600;
+            background: #fafafa;
+            border: 1.5px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+
+        .menu-option:hover {
+            background: #fff9e8;
+            border-color: #d4af37;
+            color: #111;
+        }
+
+        .menu-option .opt-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        /* CASH OUT card especial */
+        .menu-card.cashout .menu-card-header {
+            background: linear-gradient(135deg, #111 0%, #1e1e1e 100%);
+            border-bottom: none;
+        }
+
+        .menu-card.cashout .menu-label {
+            color: #d4af37;
+        }
+
+        .menu-card.cashout .menu-sublabel {
+            color: #888;
+        }
+
+        .menu-card.cashout .chevron {
+            color: #555;
+        }
+
+        .menu-card.cashout .menu-card-header:hover {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        }
+
+        /* Próximamente badge */
+        .badge-soon {
+            font-size: 10px;
+            font-weight: 700;
+            background: #d4af37;
+            color: #111;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 600px) {
+            .content { padding: 16px; }
+            .page { padding: 20px 0 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <main class="content">
+            <div class="background-logo"></div>
+            <div class="page">
+
+                <!-- Header con saludo y nombre -->
+                <div class="header">
+                    <div class="header-left">
+                        <div class="header-logo">
+                            <img src="/static/img/logo.png" alt="Logo FTRA">
+                        </div>
+                        <div class="header-text">
+                            <div class="greeting">{{ saludo }},</div>
+                            <div class="name">{{ nombre }}</div>
+                        </div>
+                    </div>
+                    <a href="/logout" class="btn-logout">Salir 🚪</a>
+                </div>
+
+                <!-- Menú -->
+                <div class="menu-grid">
+
+                    <!-- Gestión de Facturas -->
+                    <div class="menu-card">
+                        <div class="menu-card-header open" onclick="toggleCard(this)">
+                            <div class="menu-card-title">
+                                <div class="menu-icon">🧾</div>
+                                <div>
+                                    <div class="menu-label">Gestión de Facturas</div>
+                                    <div class="menu-sublabel">Sube y consulta tus facturas</div>
+                                </div>
+                            </div>
+                            <span class="chevron">⌄</span>
+                        </div>
+                        <div class="menu-card-body open">
+                            <a href="/subir-factura" class="menu-option">
+                                <span class="opt-icon">📤</span>
+                                Subir nueva factura
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- CASH OUT -->
+                    <div class="menu-card cashout">
+                        <div class="menu-card-header" onclick="toggleCard(this)">
+                            <div class="menu-card-title">
+                                <div class="menu-icon">💰</div>
+                                <div>
+                                    <div class="menu-label">CASH OUT <span class="badge-soon">Próximo</span></div>
+                                    <div class="menu-sublabel">Solicitudes y anticipos</div>
+                                </div>
+                            </div>
+                            <span class="chevron">⌄</span>
+                        </div>
+                        <div class="menu-card-body">
+                            <div class="menu-option" style="opacity:0.5;cursor:default;">
+                                <span class="opt-icon">🔒</span>
+                                Disponible próximamente
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleCard(header) {
+            const body = header.nextElementSibling;
+            const isOpen = header.classList.contains('open');
+            header.classList.toggle('open', !isOpen);
+            body.classList.toggle('open', !isOpen);
+        }
+    </script>
+</body>
+</html>
